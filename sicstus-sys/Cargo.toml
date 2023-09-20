@@ -1,0 +1,10 @@
+[package]
+name = "sicstus-sys"
+version = "0.1.0"
+edition = "2021"
+description = " Low-level Rust bindings for SICStus Prolog."
+categories = ["external-ffi-bindings"]
+
+
+[build-dependencies]
+bindgen = "0.65.1"
