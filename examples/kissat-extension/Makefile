@@ -7,7 +7,7 @@ build:
 
 ex.so: build
 	splfr ex.pl ex.c --verbose --keep -o ex.so
-	gcc -shared    -Wl,--version-script=ex_glue.mapfile ex.o ex_glue.o -o ex.so  -ldl -lm -lpthread -lrt -lsicstus_rs -Ltarget/debug
+	gcc -shared    -Wl,--version-script=ex_glue.mapfile ex.o ex_glue.o -o ex.so  -ldl -lm -lpthread -lrt -lsatsolver_kissat -Ltarget/debug
 
 test: ex.so
 	sicstus -l ex -- -Ltarget/debug

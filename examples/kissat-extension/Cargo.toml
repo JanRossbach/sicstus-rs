@@ -1,10 +1,13 @@
 [package]
-name = "sicstus-rs"
+name = "satsolver-kissat"
 version = "0.1.0"
 edition = "2021"
 
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
-sicstus-sys = { path = "./sicstus-sys", version = "0.1.0" }
+kissat = "0.1.0"
+sicstus-rs = { path = "../../../sicstus-rs", version = "0.1.0" }
