@@ -1,0 +1,12 @@
+#+AUTHOR: Jan Roßbach
+#+TITLE: sicstus-rs
+
+* SICSTus for Rust
+
+[[https://quintus.sics.se/isl/sicstuswww/site/index.html][SICStus Prolog]] is a propriatary Prolog implementation
+
+* Example
+
+#+begin_src rust
+
+#+end_src
