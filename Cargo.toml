@@ -7,6 +7,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+lazy_static = "1.4.0"
 mockall = "0.11.4"
 mockall_double = "0.3.0"
+regex = "1.9.5"
 sicstus-sys = { path = "./sicstus-sys", version = "0.1.0" }

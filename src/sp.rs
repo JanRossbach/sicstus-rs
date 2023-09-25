@@ -1,4 +1,5 @@
 use crate::error::PrologError;
+use crate::util::string_from_ref;
 use std::ffi::{c_char, c_int};
 
 /// Re export of the sicstus_sys crate low level bindings for SICStus Prolog.
@@ -18,26 +19,12 @@ pub mod sys {
 use ffi::*;
 pub use sys as ffi;
 
-/// Create a new [String] from a *const pointer to a C string.
-/// This does not take ownership of the pointer. The caller is responsible for freeing the memory.
-/// # Safety
-/// The pointer must be valid and point to a null terminated C string.
-pub unsafe fn string_from_ref(sp: *const c_char) -> String {
-    let mut result = String::new();
-    let mut cp: *const c_char = sp;
-    loop {
-        let c: c_char = *cp;
-        let c = c as u8 as char;
-        if c == '\0' {
-            break;
-        }
-        result.push(c as u8 as char);
-        cp = cp.add(1);
-    }
-    result
-}
-
 /// Save wrapper around the unsafe [SP_get_string] function from Prolog.
+/// # Arguments
+/// * `term_ref` - The term reference to convert.
+/// # Returns a Result of
+/// * `Ok(s)` - The String value of the term reference wrapped in an [Ok] variant.
+/// * `Err(PrologError::TermConversionError)` - If the term reference could not be converted.
 pub fn sp_get_string(term_ref: SP_term_ref) -> Result<String, PrologError> {
     unsafe {
         let mut s: *const c_char = std::ptr::null_mut();
@@ -48,6 +35,25 @@ pub fn sp_get_string(term_ref: SP_term_ref) -> Result<String, PrologError> {
             Ok(string_from_ref(s))
         }
     }
+}
+
+#[cfg(test)]
+#[test]
+fn test_sp_get_string() {
+    use mockall::predicate::{always, eq};
+    let t: SP_term_ref = SP_term_ref::default();
+    let sp_get_string_ctx = SP_get_string_context();
+    sp_get_string_ctx
+        .expect()
+        .with(eq(t), always())
+        .returning(|_, pointer| {
+            unsafe {
+                *pointer = crate::test_utils::TEST_ATOM_NAME_STR.as_ptr() as *const c_char;
+            }
+            1
+        });
+    let res = sp_get_string(t).unwrap();
+    assert_eq!(res, "test".to_string());
 }
 
 /// Save wrapper around the unsafe [SP_get_integer] function from Prolog.

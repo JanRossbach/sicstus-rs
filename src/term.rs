@@ -1,6 +1,5 @@
 use crate::sp::sys::*;
 use crate::sp::*;
-use crate::error::PrologError;
 
 #[derive(Debug, PartialEq)]
 pub enum TermKind {
@@ -30,42 +29,6 @@ impl Term {
         self.term_ref
     }
 }
-
-impl From<&str> for Term {
-    fn from(name: &str) -> Self {
-        let term_ref: SP_term_ref = unsafe { SP_new_term_ref() };
-        Term {
-            term_ref,
-            kind: TermKind::Atom(name.to_string()),
-        }
-    }
-}
-
-impl TryFrom<SP_term_ref> for Term {
-    type Error = PrologError;
-    fn try_from(term_ref: SP_term_ref) -> Result<Term, PrologError> {
-        unsafe {
-            if SP_is_atom(term_ref) == 1 {
-                let name = sp_get_string(term_ref)?;
-                return Ok(Term {
-                    term_ref,
-                    kind: TermKind::Atom(name),
-                });
-            }
-            if SP_is_integer(term_ref) == 1 {
-                let i = sp_get_integer(term_ref)?;
-                return Ok(Term {
-                    term_ref,
-                    kind: TermKind::Integer(i),
-                });
-            }
-            // TODO Other Variants ...
-        }
-        Err(PrologError::NoTermVariantMatch)
-    }
-}
-
-impl Term {}
 
 impl PartialEq for Term {
     fn eq(&self, other: &Self) -> bool {
