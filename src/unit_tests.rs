@@ -1,4 +1,6 @@
-use super::*;
+use crate::sp::*;
+use crate::term::{Term, TermKind};
+use crate::sp::sys::*;
 
 use mockall::predicate::*;
 
@@ -13,7 +15,7 @@ fn test_term_try_from() {
     // Sometimes fails after rebuild because of some mockall issue...
     // Arrange
     let term_ref_ctx = SP_new_term_ref_context();
-    term_ref_ctx.expect().returning(|| SP_term_ref::default());
+    term_ref_ctx.expect().returning(SP_term_ref::default);
 
     let is_atom_ctx = SP_is_atom_context();
     is_atom_ctx.expect().with(eq(0)).return_const(1);
@@ -64,6 +66,6 @@ fn test_string_copy() {
         let pp = pp.add(1);
         assert_eq!('l', *(pp.add(1)) as u8 as char);
     }
-    let copied_string: String = string_from_ref(s);
+    let copied_string: String = unsafe { string_from_ref(s) };
     assert_eq!(copied_string, "Hello, World!".to_string());
 }
