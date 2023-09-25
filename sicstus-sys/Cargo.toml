@@ -8,3 +8,6 @@ categories = ["external-ffi-bindings"]
 
 [build-dependencies]
 bindgen = "0.65.1"
+
+[dependencies]
+mockall = { version = "0.11.4", features = ["nightly"] }
