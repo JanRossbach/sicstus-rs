@@ -40,6 +40,7 @@ pub fn sp_get_string(term_ref: SP_term_ref) -> Result<String, PrologError> {
 #[cfg(test)]
 #[test]
 fn test_sp_get_string() {
+    let _mutex_guard = crate::test_utils::get_lock();
     use mockall::predicate::{always, eq};
     let t: SP_term_ref = SP_term_ref::default();
     let sp_get_string_ctx = SP_get_string_context();

@@ -122,7 +122,7 @@ fn test_term_try_from() {
     });
 
     // Act
-    let term: Term = Term::from("test");
+    let term: Term = Term::try_from("test").unwrap();
     let term_ref = term.to_term_ref();
     let t = Term::try_from(term_ref).unwrap();
 

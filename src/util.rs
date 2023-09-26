@@ -1,5 +1,5 @@
-use std::ffi::c_char;
 use regex::Regex;
+use std::ffi::c_char;
 
 /// Create a new [String] from a *const pointer to a C string.
 /// This does not take ownership of the pointer. The caller is responsible for freeing the memory.
@@ -34,7 +34,6 @@ fn test_string_copy() {
     let copied_string: String = unsafe { string_from_ref(s) };
     assert_eq!(copied_string, "Hello, World!".to_string());
 }
-
 
 pub fn is_valid_atom_name(name: &str) -> bool {
     // TODO Check for correct bracket pairs

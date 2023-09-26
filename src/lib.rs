@@ -1,12 +1,10 @@
 //! High Level API for SICStus Prolog.
 
-
 mod conversions;
 pub mod error;
 pub mod sp;
 pub mod term;
 mod util;
-
 
 #[cfg(test)]
 mod test_utils {
