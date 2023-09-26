@@ -1,5 +1,6 @@
 use crate::sp::sys::*;
 use crate::sp::*;
+use crate::sp::terms::sp_compare;
 
 #[derive(Debug, PartialEq)]
 pub enum TermKind {
@@ -62,15 +63,7 @@ impl PartialOrd for Term {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         let s: sys::SP_term_ref = self.term_ref;
         let o: sys::SP_term_ref = other.term_ref;
-        unsafe {
-            let result: i32 = SP_compare(s, o);
-            match result {
-                0 => Some(std::cmp::Ordering::Equal),
-                -1 => Some(std::cmp::Ordering::Less),
-                1 => Some(std::cmp::Ordering::Greater),
-                _ => None,
-            }
-        }
+        Some(sp_compare(s, o))
     }
 }
 
@@ -79,7 +72,7 @@ impl Ord for Term {
         let r = self.partial_cmp(other);
         match r {
             Some(o) => o,
-            None => panic!("Cannot compare these terms. SP_compare returned an invalid value, meaning not -1, 0, or 1."),
+            None => panic!("Unexpected return value from sp_compare: None"),
         }
     }
 }

@@ -1,6 +1,7 @@
 use crate::error::PrologError;
+use crate::sp::interface::sp_get_integer;
+use crate::sp::interface::sp_get_string;
 use crate::sp::sys::*;
-use crate::sp::*;
 use crate::term::Term;
 use crate::term::TermKind;
 use crate::util::*;

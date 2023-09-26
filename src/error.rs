@@ -2,6 +2,9 @@
 pub enum PrologError {
     TermConversionError,
     NoTermVariantMatch,
+    AtomNotFound(String),
+    CloseQueryError(String),
+    UnexpectedReturnCode,
 }
 
 // region:    --- Error Boilerplate

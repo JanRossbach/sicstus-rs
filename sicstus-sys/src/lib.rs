@@ -20,7 +20,7 @@ pub use bindings::{
     spio_t_simple_device_read, spio_t_simple_device_seek, spio_t_simple_device_write, spio_t_wchar,
     SP_CPredFun, SP_SigFun, SP_UserStreamHook, SP_UserStreamPostHook, SP_atom,
     SP_get_dispatch_type, SP_integer, SP_mutex, SP_options, SP_pred_ref, SP_qid, SP_stream,
-    SP_term_ref, SICSTUS_API_STRUCT,
+    SP_term_ref, SICSTUS_API_STRUCT, SP_SUCCESS, SP_ERROR, spio_t_uint8
 };
 
 use mockall::automock;
@@ -69,7 +69,7 @@ pub mod ffi {
         spio_t_simple_device_ioctl, spio_t_simple_device_read, spio_t_simple_device_seek,
         spio_t_simple_device_write, spio_t_wchar, SP_CPredFun, SP_SigFun, SP_UserStreamHook,
         SP_UserStreamPostHook, SP_atom, SP_get_dispatch_type, SP_integer, SP_mutex, SP_options,
-        SP_pred_ref, SP_qid, SP_stream, SP_term_ref, SICSTUS_API_STRUCT,
+        SP_pred_ref, SP_qid, SP_stream, SP_term_ref, SICSTUS_API_STRUCT, spio_t_uint8
     };
     use core::ffi::c_void;
     use core::ffi::{c_char, c_int};
@@ -476,6 +476,7 @@ pub mod ffi {
         pub fn SP_get_current_dir() -> *mut c_char;
         pub fn SP_get_dispatch(reserved: *mut c_void) -> *mut SICSTUS_API_STRUCT;
         pub fn SP_get_float(term: SP_term_ref, f: *mut f64) -> c_int;
+        pub fn SP_get_errno() -> c_int;
         pub fn SP_get_functor(term: SP_term_ref, name: *mut SP_atom, arity: *mut c_int) -> c_int;
         pub fn SP_get_integer(term: SP_term_ref, integer: *mut SP_integer) -> c_int;
         pub fn SP_get_integer_bytes(
@@ -553,6 +554,12 @@ pub mod ffi {
         pub fn SP_put_address(term: SP_term_ref, pointer: *mut c_void) -> c_int;
         pub fn SP_put_atom(term: SP_term_ref, atom: SP_atom) -> c_int;
         pub fn SP_put_byte(stream: *mut SP_stream, item: c_int) -> spio_t_error_code;
+        pub fn SP_put_bytes(
+            strea: *mut SP_stream,
+            codes: *const spio_t_uint8,
+            byte_count: usize,
+            options: spio_t_bits,
+        ) -> spio_t_error_code;
         pub fn SP_put_code(stream: *mut SP_stream, item: c_int) -> spio_t_error_code;
         pub fn SP_put_codes(
             strea: *mut SP_stream,
