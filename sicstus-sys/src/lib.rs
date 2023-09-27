@@ -525,7 +525,7 @@ pub mod ffi {
         ) -> c_int;
         pub fn SP_is_atom(term: SP_term_ref) -> c_int;
         pub fn SP_is_atomic(term: SP_term_ref) -> c_int;
-        pub fn SP_is_compount(term: SP_term_ref) -> c_int;
+        pub fn SP_is_compound(term: SP_term_ref) -> c_int;
         pub fn SP_is_float(term: SP_term_ref) -> c_int;
         pub fn SP_is_integer(term: SP_term_ref) -> c_int;
         pub fn SP_is_list(term: SP_term_ref) -> c_int;

@@ -1,6 +1,7 @@
-use crate::sp::sys::*;
+use std::cmp::Ordering;
+
+use crate::sp::terms::{sp_compare, sp_new_term_ref};
 use crate::sp::*;
-use crate::sp::terms::sp_compare;
 
 #[derive(Debug, PartialEq)]
 pub enum TermKind {
@@ -22,7 +23,7 @@ pub struct Term {
 
 impl Term {
     pub fn new(kind: TermKind) -> Self {
-        let term_ref: SP_term_ref = unsafe { SP_new_term_ref() };
+        let term_ref: SP_term_ref = sp_new_term_ref();
         Term { term_ref, kind }
     }
 
@@ -37,10 +38,7 @@ impl PartialEq for Term {
     fn eq(&self, other: &Self) -> bool {
         let s: sys::SP_term_ref = self.term_ref;
         let o: sys::SP_term_ref = other.term_ref;
-        unsafe {
-            let result = SP_compare(s, o);
-            result == 0
-        }
+        sp_compare(s, o) == Ordering::Equal
     }
 }
 impl Eq for Term {}
@@ -48,6 +46,8 @@ impl Eq for Term {}
 #[cfg(test)]
 #[test]
 fn test_term_eq() {
+    use sicstus_sys::mock_ffi::{SP_compare_context, SP_new_term_ref_context};
+
     let _lock = crate::test_utils::get_lock();
     let ctx = SP_new_term_ref_context();
     ctx.expect().returning(SP_term_ref::default);

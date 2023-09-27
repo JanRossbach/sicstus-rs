@@ -1,10 +1,16 @@
+use crate::sp::sys::SP_term_ref;
+
 #[derive(Debug)]
 pub enum PrologError {
     TermConversionError,
     NoTermVariantMatch,
     AtomNotFound(String),
     CloseQueryError(String),
-    UnexpectedReturnCode,
+    UnexpectedReturnCode(i32),
+    NoExceptionTerm(SP_term_ref),
+    UncussefulUnificationError(i32, i32),
+    ConsFunctorError,
+    QueryOpenUnsuccessful,
 }
 
 // region:    --- Error Boilerplate

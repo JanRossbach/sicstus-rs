@@ -1,6 +1,7 @@
 use crate::error::PrologError;
 use crate::sp::interface::sp_get_integer;
 use crate::sp::interface::sp_get_string;
+use crate::sp::terms::sp_new_term_ref;
 use crate::sp::sys::*;
 use crate::term::Term;
 use crate::term::TermKind;
@@ -8,7 +9,7 @@ use crate::util::*;
 
 impl From<&str> for Term {
     fn from(name: &str) -> Self {
-        let term_ref: SP_term_ref = unsafe { SP_new_term_ref() };
+        let term_ref: SP_term_ref = sp_new_term_ref();
         let first_char: char = name
             .chars()
             .next()
@@ -39,7 +40,7 @@ impl From<&str> for Term {
 
 impl From<i64> for Term {
     fn from(i: i64) -> Self {
-        let term_ref: SP_term_ref = unsafe { SP_new_term_ref() };
+        let term_ref: SP_term_ref = sp_new_term_ref();
         Term {
             term_ref,
             kind: TermKind::Integer(i),
@@ -49,7 +50,7 @@ impl From<i64> for Term {
 
 impl From<f64> for Term {
     fn from(f: f64) -> Self {
-        let term_ref: SP_term_ref = unsafe { SP_new_term_ref() };
+        let term_ref: SP_term_ref = sp_new_term_ref();
         Term {
             term_ref,
             kind: TermKind::Float(f),

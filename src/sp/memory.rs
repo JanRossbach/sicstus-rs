@@ -1,3 +1,5 @@
+//! This module contains the functions from the memory management section. This is currently unsupported.
+//! For rust memory management, a custom allocator would be needed. This is so far unimplemented.
 
 // pub fn sp_calloc(nmemb: usize, size: usize) -> *mut c_void;
 // pub fn sp_malloc(size: usize) -> *mut c_void;
