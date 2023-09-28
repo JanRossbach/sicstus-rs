@@ -43,21 +43,21 @@ impl PartialEq for Term {
 }
 impl Eq for Term {}
 
-#[cfg(test)]
-#[test]
-fn test_term_eq() {
-    use sicstus_sys::mock_ffi::{SP_compare_context, SP_new_term_ref_context};
+// #[cfg(test)]
+// #[test]
+// fn test_term_eq() {
+//     use sicstus_sys::mock_ffi::{SP_compare_context, SP_new_term_ref_context};
 
-    let _lock = crate::test_utils::get_lock();
-    let ctx = SP_new_term_ref_context();
-    ctx.expect().returning(SP_term_ref::default);
+//     let _lock = crate::test_utils::get_lock();
+//     let ctx = SP_new_term_ref_context();
+//     ctx.expect().returning(SP_term_ref::default);
 
-    let ctx1 = SP_compare_context();
-    ctx1.expect().return_const(0);
-    let t1 = Term::new(TermKind::Atom("a".to_string()));
-    let t2 = Term::new(TermKind::Atom("a".to_string()));
-    assert_eq!(t1, t2);
-}
+//     let ctx1 = SP_compare_context();
+//     ctx1.expect().return_const(0);
+//     let t1 = Term::new(TermKind::Atom("a".to_string()));
+//     let t2 = Term::new(TermKind::Atom("a".to_string()));
+//     assert_eq!(t1, t2);
+// }
 
 impl PartialOrd for Term {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {

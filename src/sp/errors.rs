@@ -42,8 +42,8 @@ pub fn sp_exception_term() -> Result<SP_term_ref, PrologError> {
 /// and will cause Prolog to backtrack on return from the call.
 /// *Please note*: this should only be called right before returning to Prolog.
 /// See also: <https://sicstus.sics.se/sicstus/docs/latest4/pdf/sicstus.pdf#Exception%20Handling%20in%20C>
-pub fn sp_fail(term: SP_term_ref) {
-    unsafe { SP_fail(term) }
+pub fn sp_fail() {
+    unsafe { SP_fail() }
 }
 
 /// Raise an exception that will detected when the Program returns to Prolog.
