@@ -27,9 +27,9 @@ pub use bindings::{
     spio_t_bits, spio_t_error_code, spio_t_offset, spio_t_simple_device_close,
     spio_t_simple_device_flush_output, spio_t_simple_device_interrupt, spio_t_simple_device_ioctl,
     spio_t_simple_device_read, spio_t_simple_device_seek, spio_t_simple_device_write, spio_t_uint8,
-    spio_t_wchar, SP_CPredFun, SP_SigFun, SP_UserStreamHook, SP_UserStreamPostHook, SP_atom,
-    SP_get_dispatch_type, SP_integer, SP_mutex, SP_options, SP_pred_ref, SP_qid, SP_stream,
-    SP_term_ref, SICSTUS_API_STRUCT, SP_ERROR, SP_SUCCESS, SP_EventFun
+    spio_t_wchar, SP_CPredFun, SP_EventFun, SP_SigFun, SP_UserStreamHook, SP_UserStreamPostHook,
+    SP_atom, SP_get_dispatch_type, SP_integer, SP_mutex, SP_options, SP_pred_ref, SP_qid,
+    SP_stream, SP_term_ref, SICSTUS_API_STRUCT, SP_ERROR, SP_SUCCESS,
 };
 
 #[macro_use]
@@ -44,7 +44,7 @@ unsafe impl Send for Sicstus {}
 unsafe impl Sync for Sicstus {}
 
 struct Sicstus {
-    sicstus: *mut SICSTUS_API_STRUCT,
+    _sicstus: *mut SICSTUS_API_STRUCT,
     dt: DISPATCH_TABLE_STRUCT_SICSTUS_H,
 }
 
@@ -52,10 +52,17 @@ impl Sicstus {
     fn new() -> Self {
         unsafe {
             let sicstus: *mut SICSTUS_API_STRUCT = SP_get_dispatch_40800(std::ptr::null_mut());
-            let dt = SICSTUS.lock().unwrap();
-            let dt = *(dt.sicstus);
-            let dt = *dt.dispatch_API_SICSTUS_H;
-            Sicstus { sicstus, dt }
+            let dt = (*sicstus).dispatch_API_SICSTUS_H;
+            let dt = *dt;
+            let initialized = dt.psp_prolog_initialized.unwrap()();
+            assert!(
+                initialized != 0,
+                "SICStus Prolog runtime not initialized!"
+            );
+            Sicstus {
+                _sicstus: sicstus,
+                dt,
+            }
         }
     }
 }
@@ -166,12 +173,8 @@ define_dispatch_fns!(
     SP_get_string(term: SP_term_ref, string: *mut *const c_char) -> c_int,
     #[field_name=(pSP_getenv)]
     SP_getenv(name: *const c_char) -> *mut c_char,
-    // #[field_name=(psp_glue_initialize)]
-    // SP_initialize(
-    //     argc: c_int,
-    //     argv: *mut *mut c_char,
-    //     options: *mut SP_options,
-    // ) -> c_int,
+    #[field_name=(psp_prolog_initialized)]
+    sp_prolog_initialized() -> c_int,
     #[field_name=(pSP_is_atom)]
     SP_is_atom(term: SP_term_ref) -> c_int,
     #[field_name=(pSP_is_atomic)]
