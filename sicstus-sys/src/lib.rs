@@ -29,7 +29,8 @@ pub use bindings::{
     spio_t_simple_device_read, spio_t_simple_device_seek, spio_t_simple_device_write, spio_t_uint8,
     spio_t_wchar, SP_CPredFun, SP_EventFun, SP_SigFun, SP_UserStreamHook, SP_UserStreamPostHook,
     SP_atom, SP_get_dispatch_type, SP_integer, SP_mutex, SP_options, SP_pred_ref, SP_qid,
-    SP_stream, SP_term_ref, SICSTUS_API_STRUCT, SP_ERROR, SP_SUCCESS,
+    SP_stream, SP_term_ref, SICSTUS_API_STRUCT, SP_ERROR, SP_FAILURE, SP_SUCCESS, SP_TYPE_ATOM,
+    SP_TYPE_COMPOUND, SP_TYPE_ERROR, SP_TYPE_FLOAT, SP_TYPE_INTEGER, SP_TYPE_VARIABLE,
 };
 
 #[macro_use]
@@ -55,10 +56,7 @@ impl Sicstus {
             let dt = (*sicstus).dispatch_API_SICSTUS_H;
             let dt = *dt;
             let initialized = dt.psp_prolog_initialized.unwrap()();
-            assert!(
-                initialized != 0,
-                "SICStus Prolog runtime not initialized!"
-            );
+            assert!(initialized != 0, "SICStus Prolog runtime not initialized!");
             Sicstus {
                 _sicstus: sicstus,
                 dt,

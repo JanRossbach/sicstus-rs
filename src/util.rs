@@ -45,6 +45,7 @@ pub fn is_valid_atom_name(name: &str) -> bool {
 #[cfg(test)]
 #[test]
 fn test_is_valid_atom_name() {
+    assert!(!is_valid_atom_name(""));
     assert!(is_valid_atom_name("a"));
     assert!(is_valid_atom_name("a+-*/\\^<>=~:.?@#$&!;[]{}"));
     assert!(!is_valid_atom_name("X1"));
@@ -55,4 +56,15 @@ fn test_is_valid_atom_name() {
 pub fn is_valid_variable_name(name: &str) -> bool {
     let re = Regex::new(r"^[A-Z_][a-zA-Z0-9_]*$").unwrap();
     re.is_match(name)
+}
+
+#[cfg(test)]
+#[test]
+fn test_is_valid_variable_name() {
+    assert!(!is_valid_variable_name(""));
+    assert!(is_valid_variable_name("X"));
+    assert!(!is_valid_variable_name("a+-*/\\^<>=~:.?@#$&!;[]{}"));
+    assert!(is_valid_variable_name("X1"));
+    assert!(is_valid_variable_name("_X1"));
+    assert!(!is_valid_variable_name("'_X1'"));
 }

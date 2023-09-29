@@ -14,7 +14,7 @@ pub mod terms;
 
 /// Re export of the sicstus_sys crate low level bindings for SICStus Prolog.
 /// For when you need fine grained control over the C API.
-pub mod sys {
+mod sys {
     #[cfg(not(test))]
     pub use sicstus_sys::*;
 

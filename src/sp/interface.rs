@@ -1,28 +1,28 @@
 //! This module contains the safe wrappers around the functions from the 'Foreign Interface' section.
 //! See <https://sicstus.sics.se/sicstus/docs/latest4/pdf/sicstus.pdf#cpg-top-fin>
 
-use super::errors::sp_err_message;
 use super::sys::*;
+use super::{errors::sp_err_message, terms::sp_new_term_ref};
 use crate::error::PrologError;
 use crate::util::string_from_ref;
 
 use std::{
-    ffi::{c_void, c_uchar},
+    ffi::{c_uchar, c_void},
     os::raw::{c_char, c_int},
 };
 
 /// Retrieve the Prolog ID corresponding to the given atom name.
 ///
 /// # Arguments
-/// * `atom_name` - A rust String containing the atom name.
+/// * `atom_name` - A rust &str containing the atom name.
 ///
 /// # Returns
 /// The Prolog ID corresponding to the given atom name if it exists, and an error otherwise.
 /// See also: <https://sicstus.sics.se/sicstus/docs/latest4/pdf/sicstus.pdf#Creating%20and%20Manipulating%20SP_term_refs>
-pub fn sp_atom_from_string(atom_name: String) -> Result<SP_atom, PrologError> {
+pub fn sp_atom_from_string(atom_name: &str) -> Result<SP_atom, PrologError> {
     let atom_id: SP_atom = unsafe { SP_atom_from_string(atom_name.as_ptr() as *const c_char) };
     if atom_id == 0 {
-        Err(PrologError::AtomNotFound(atom_name))
+        Err(PrologError::AtomNotFound(atom_name.to_string()))
     } else {
         Ok(atom_id)
     }
@@ -81,20 +81,16 @@ pub fn sp_close_query(query: SP_qid) -> Result<(), PrologError> {
 /// similar to calling =../2 with the first argument unbound and the second argument bound.
 ///
 /// # Arguments
-/// * term - The [SP_term_ref] to be assigned.
 /// * name - The name of the functor.
 /// * arity - The arity of the functor.
 /// * arg - The argument array.
 ///
 /// # Returns
+/// Ok(SP_term_ref) of the assigned new term if the conversion was successful, and Err otherwise.
 ///
-/// Zero if the conversion fails (as far as failure can be detected), and a nonzero value otherwise.
 /// See also: <https://sicstus.sics.se/sicstus/docs/latest4/pdf/sicstus.pdf#Creating%20Prolog%20Terms>
-pub fn sp_cons_functor(
-    term: SP_term_ref,
-    name: SP_atom,
-    args: &[SP_term_ref],
-) -> Result<(), PrologError> {
+pub fn sp_cons_functor(name: SP_atom, args: &[SP_term_ref]) -> Result<SP_term_ref, PrologError> {
+    let term = sp_new_term_ref();
     let arg_p = args.as_ptr() as *mut SP_term_ref;
     let arity = args.len() as c_int;
     // We call the array version of the C API because rust does not support variadic functions.
@@ -102,7 +98,7 @@ pub fn sp_cons_functor(
     if ret_value == 0 {
         Err(PrologError::ConsFunctorError)
     } else {
-        Ok(())
+        Ok(term)
     }
 }
 
@@ -112,20 +108,23 @@ pub fn sp_cons_functor_array() -> c_int {
     )
 }
 
-// TODO From here
-
 /// Assigns to term a reference to a Prolog list whose head and tail are the values of head and tail.
 ///
 /// # Arguments
-/// * term - The [SP_term_ref] to be assigned.
 /// * head - The head of the new list.
 /// * tail - The tail of the new list.
 ///
 /// # Returns
-/// Zero if the conversion fails (as far as failure can be detected), and a nonzero value otherwise.
+/// Ok(term_ref) of the assigned new term if the conversion was successful, and Err otherwise.
 /// See also: <https://sicstus.sics.se/sicstus/docs/latest4/pdf/sicstus.pdf#Creating%20Prolog%20Terms>
-pub fn sp_cons_list(term: SP_term_ref, head: SP_term_ref, tail: SP_term_ref) -> c_int {
-    unsafe { SP_cons_list(term, head, tail) }
+pub fn sp_cons_list(head: SP_term_ref, tail: SP_term_ref) -> Result<SP_term_ref, PrologError> {
+    let term = sp_new_term_ref();
+    let ret_val = unsafe { SP_cons_list(term, head, tail) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError)
+    } else {
+        Ok(term)
+    }
 }
 
 /// Commit to the current solution to the given query, and close it.
@@ -134,7 +133,7 @@ pub fn sp_cons_list(term: SP_term_ref, head: SP_term_ref, tail: SP_term_ref) -> 
 /// * query - The query, created by [SP_open_query].
 ///
 /// # Return Value
-/// [SP_SUCCESS] for success, [SP_FAILURE] for failure, [SP_ERROR] if an error condition occurred.
+/// Ok(()) for success, and appropriate error otherwise.
 /// See also: <https://sicstus.sics.se/sicstus/docs/latest4/pdf/sicstus.pdf#Finding%20Multiple%20Solutions%20of%20a%20Call>
 ///
 /// # Description
@@ -142,15 +141,23 @@ pub fn sp_cons_list(term: SP_term_ref, head: SP_term_ref, tail: SP_term_ref) -> 
 /// !. The current solution is retained in the arguments until backtracking into any enclosing
 /// query. The given argument does not have to be the innermost open query; any open queries
 /// in its scope will also be cut.
-pub fn sp_cut_query(query: SP_qid) -> c_int {
-    unsafe { SP_cut_query(query) }
+pub fn sp_cut_query(query: SP_qid) -> Result<(), PrologError> {
+    let re_val = unsafe { SP_cut_query(query) };
+    if re_val == SP_ERROR {
+        // We got a SP_ERROR, so the safety condition is met and we can call sp_error_message.
+        unsafe { Err(PrologError::CutQueryError(sp_err_message())) }
+    } else if re_val == SP_FAILURE as c_int {
+        Err(PrologError::CutQueryFailure)
+    } else if re_val == SP_SUCCESS as c_int {
+        Ok(())
+    } else {
+        Err(PrologError::UnexpectedReturnCode(re_val))
+    }
 }
 
-/// Defines a Prolog predicate such that when the Prolog predicate is called it will call a
-/// C function with a term corresponding to the Prolog goal.
+/// Defines a Prolog predicate that calls a C function.
 ///
 /// # Arguments
-///
 /// * name - The predicate name.
 /// * arity - The predicate arity.
 /// * module - The predicate module name.
@@ -171,16 +178,35 @@ pub fn sp_define_c_predicate(
     module: *const c_char,
     proc: SP_CPredFun,
     stash: *mut c_void,
-) -> c_int {
-    unsafe { SP_define_c_predicate(name, arity, module, proc, stash) }
+) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_define_c_predicate(name, arity, module, proc, stash) };
+    if ret_val == 0 {
+        Err(PrologError::DefineCPredicateError)
+    } else {
+        Ok(())
+    }
 }
 
-pub fn sp_get_address(term: SP_term_ref, p: *mut *mut c_void) -> c_int {
-    unsafe { SP_get_address(term, p) }
+/// Returns a pointer to the
+pub fn sp_get_address(term: SP_term_ref) -> Result<*mut *mut c_void, PrologError> {
+    let p = std::ptr::null_mut();
+    let ret_val = unsafe { SP_get_address(term, p) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError)
+    } else {
+        Ok(p)
+    }
 }
 
-pub fn sp_get_arg(index: c_int, term: SP_term_ref, arg: SP_term_ref) -> c_int {
-    unsafe { SP_get_arg(index, term, arg) }
+/// Returns a SP_term_ref to the i'th argument of a compound *term*.
+pub fn sp_get_arg(i: usize, term: SP_term_ref) -> Result<SP_term_ref, PrologError> {
+    let arg = sp_new_term_ref();
+    let ret_val = unsafe { SP_get_arg(i as c_int, term, arg) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError)
+    } else {
+        Ok(arg)
+    }
 }
 pub fn sp_get_atom(term: SP_term_ref, atom: *mut SP_atom) -> c_int {
     unsafe { SP_get_atom(term, atom) }
@@ -241,6 +267,7 @@ pub fn sp_get_list_n_codes(
 ) -> c_int {
     unsafe { SP_get_list_n_codes(term, tail, n, w, s) }
 }
+
 pub fn sp_get_number_codes(term: SP_term_ref, s: *mut *const c_char) -> c_int {
     unsafe { SP_get_number_codes(term, s) }
 }
@@ -283,15 +310,31 @@ pub fn sp_get_string(term_ref: SP_term_ref) -> Result<String, PrologError> {
 //     assert_eq!(res, "test".to_string());
 // }
 
-pub fn sp_next_solution(query: SP_qid) -> c_int {
-    unsafe { SP_next_solution(query) }
+/// Look for the next solution in the given query.
+///
+/// # Arguments
+/// * query - The query, created by [SP_open_query].
+/// # Return Value
+/// Ok(()) for success, and appropriate error otherwise.
+/// # Description
+/// This will cause the Prolog engine to backtrack over any current solution of an open query
+/// and look for a new one. The given argument must be the innermost query that is still open,
+/// i.e. it must not have been terminated explicitly by SP_close_query() or SP_cut_query().
+/// Only when the return value is SP_SUCCESS are the values in the query arguments valid, and
+/// will remain so until backtracking into this query or an enclosing one.
+pub fn sp_next_solution(query: SP_qid) -> Result<(), PrologError> {
+    let ret_val: c_int = unsafe { SP_next_solution(query) };
+    if ret_val == SP_ERROR {
+        // We got a SP_ERROR, so the safety condition is met and we can call sp_error_message.
+        unsafe { Err(PrologError::NextSolutionError(sp_err_message())) }
+    } else if ret_val == SP_FAILURE as c_int {
+        Err(PrologError::NoMoreSolutions)
+    } else if ret_val == SP_SUCCESS as c_int {
+        Ok(())
+    } else {
+        Err(PrologError::UnexpectedReturnCode(ret_val))
+    }
 }
-
-// macro_rules! apply {
-//     ( $(A) ) => {
-//         "It matches"
-//     }
-// }
 
 /// Sets up a query for use by [SP_next_solution]. [SP_close_query] and [SP_cut_query]. Only supports arg arrays up to 15 args.
 /// # Arguments
@@ -332,5 +375,20 @@ pub fn sp_open_query(
         } else {
             Ok(result)
         }
+    }
+}
+
+/// Returns a pointer to the predicate definition.
+///
+/// # Return Value
+/// The reference if the predicate is found, NULL otherwise with error code PRED_NOT_FOUND.
+pub fn sp_pred(name_atom: &str, arity: u32, module_atom: &str) -> Result<SP_pred_ref, PrologError> {
+    let name_atom = sp_atom_from_string(name_atom)?;
+    let module_atom = sp_atom_from_string(module_atom)?;
+    let ret_val = unsafe { SP_pred(name_atom, arity as SP_integer, module_atom) };
+    if ret_val.is_null() {
+        Err(PrologError::PredicateNotFound)
+    } else {
+        Ok(ret_val)
     }
 }

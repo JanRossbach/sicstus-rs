@@ -1,6 +1,8 @@
 //! The functions relating to sections 12.2.9 and 12.2.10 of the Prolog manual.
 //! See <https://sicstus.sics.se/sicstus/docs/latest4/pdf/sicstus.pdf#cpg-top-tic>
 
+use std::ffi::c_int;
+
 use crate::error::PrologError;
 
 use super::sys::*;
@@ -95,4 +97,32 @@ pub fn sp_is_number(term: SP_term_ref) -> bool {
 /// Determines whether the value of *term* is a Prolog variable.
 pub fn sp_is_variable(term: SP_term_ref) -> bool {
     unsafe { SP_is_variable(term) == 1 }
+}
+
+/// Determines the type of the value of term.
+pub fn sp_term_type(term: SP_term_ref) -> Result<c_int, PrologError> {
+    let res = unsafe { SP_term_type(term) };
+    if res == SP_TYPE_ERROR as c_int {
+        Err(PrologError::TermConversionError)
+    } else {
+        Ok(res)
+    }
+}
+
+pub fn sp_put_variable(term: SP_term_ref) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_put_variable(term) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError)
+    } else {
+        Ok(())
+    }
+}
+
+pub fn sp_put_float(term: SP_term_ref, f: f64) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_put_float(term, f) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError)
+    } else {
+        Ok(())
+    }
 }

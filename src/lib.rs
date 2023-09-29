@@ -1,8 +1,9 @@
 //! High Level API for SICStus Prolog.
 
-mod conversions;
 mod error;
+
 pub mod sp;
+
 pub mod term;
 mod util;
 pub mod prolog;

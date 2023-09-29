@@ -1,4 +1,4 @@
-use crate::sp::sys::SP_term_ref;
+use crate::sp::SP_term_ref;
 
 #[derive(Debug)]
 pub enum PrologError {
@@ -11,6 +11,12 @@ pub enum PrologError {
     UncussefulUnificationError(i32, i32),
     ConsFunctorError,
     QueryOpenUnsuccessful,
+    PredicateNotFound,
+    NextSolutionError(String),
+    NoMoreSolutions,
+    CutQueryError(String),
+    CutQueryFailure,
+    DefineCPredicateError,
 }
 
 // region:    --- Error Boilerplate
