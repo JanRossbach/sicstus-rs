@@ -5,11 +5,18 @@
 extern crate alloc;
 
 mod error;
-
 pub mod sp;
 
 pub mod term;
 mod util;
+
+#[cfg(feature="alloc")]
+use sicstus_sys::SICStusAllocator;
+
+#[cfg(feature="alloc")]
+#[global_allocator]
+static ALLOCATOR: SICStusAllocator = SICStusAllocator;
+
 
 // #[cfg(test)]
 // mod test_utils {

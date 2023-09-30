@@ -11,3 +11,6 @@ bindgen = "0.65.1"
 
 [dependencies]
 lazy_static = "1.4.0"
+
+[features]
+alloc = []

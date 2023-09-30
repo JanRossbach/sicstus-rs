@@ -15,14 +15,10 @@ mod bindings {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
-extern crate alloc;
-
 use core::ffi::c_char;
 use core::ffi::c_int;
 use core::ffi::c_uchar;
 use core::ffi::c_void;
-
-use alloc::sync::Arc;
 
 use bindings::SP_get_dispatch_40800;
 use bindings::DISPATCH_TABLE_STRUCT_SICSTUS_H;
@@ -40,7 +36,7 @@ pub use bindings::{
 extern crate lazy_static;
 
 lazy_static! {
-    static ref SICSTUS: Arc<Sicstus> = Arc::new(Sicstus::new());
+    static ref SICSTUS: Sicstus = Sicstus::new();
 }
 
 // We only ever read the pointers in the dispatch table, so it is safe to share it between threads.
@@ -80,8 +76,7 @@ macro_rules! define_dispatch_fns {
     ) => {
         $(
             pub unsafe fn $name($($arg_name: $arg_ty),*) $(->$ret_ty)? {
-                let s = SICSTUS.as_ref();
-                (*s).dt.$field_name.unwrap()($($arg_name),*)
+                SICSTUS.dt.$field_name.unwrap()($($arg_name),*)
             }
         )+
     }
@@ -443,5 +438,26 @@ pub mod variadic {
         pub fn SP_printf(fmt: *const c_char, ...) -> spio_t_error_code;
         pub fn SP_query(predicate: SP_pred_ref, arg1: SP_term_ref, ...) -> c_int;
         pub fn SP_query_cut_fail(predicate: SP_pred_ref, arg1: SP_term_ref, ...) -> c_int;
+    }
+}
+
+#[cfg(feature="alloc")]
+use core::alloc::{GlobalAlloc, Layout};
+
+#[cfg(feature="alloc")]
+pub struct SICStusAllocator;
+
+#[cfg(feature="alloc")]
+unsafe impl GlobalAlloc for SICStusAllocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        SP_malloc(layout.size()) as *mut u8
+    }
+
+    unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
+        SP_free(ptr as *mut c_void)
+    }
+
+    unsafe fn realloc(&self, ptr: *mut u8, _layout: Layout, new_size: usize) -> *mut u8 {
+        SP_realloc(ptr as *mut c_void, new_size) as *mut u8
     }
 }
