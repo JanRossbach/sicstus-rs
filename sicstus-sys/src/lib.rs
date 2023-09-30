@@ -1,3 +1,4 @@
+#![no_std]
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -14,12 +15,14 @@ mod bindings {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
-use std::ffi::c_char;
-use std::ffi::c_int;
-use std::ffi::c_uchar;
-use std::ffi::c_void;
-use std::sync::Arc;
-use std::sync::Mutex;
+extern crate alloc;
+
+use core::ffi::c_char;
+use core::ffi::c_int;
+use core::ffi::c_uchar;
+use core::ffi::c_void;
+
+use alloc::sync::Arc;
 
 use bindings::SP_get_dispatch_40800;
 use bindings::DISPATCH_TABLE_STRUCT_SICSTUS_H;
@@ -37,7 +40,7 @@ pub use bindings::{
 extern crate lazy_static;
 
 lazy_static! {
-    static ref SICSTUS: Arc<Mutex<Sicstus>> = Arc::new(Mutex::new(Sicstus::new()));
+    static ref SICSTUS: Arc<Sicstus> = Arc::new(Sicstus::new());
 }
 
 // We only ever read the pointers in the dispatch table, so it is safe to share it between threads.
@@ -52,7 +55,7 @@ struct Sicstus {
 impl Sicstus {
     fn new() -> Self {
         unsafe {
-            let sicstus: *mut SICSTUS_API_STRUCT = SP_get_dispatch_40800(std::ptr::null_mut());
+            let sicstus: *mut SICSTUS_API_STRUCT = SP_get_dispatch_40800(core::ptr::null_mut());
             let dt = (*sicstus).dispatch_API_SICSTUS_H;
             let dt = *dt;
             let initialized = dt.psp_prolog_initialized.unwrap()();
@@ -77,7 +80,7 @@ macro_rules! define_dispatch_fns {
     ) => {
         $(
             pub unsafe fn $name($($arg_name: $arg_ty),*) $(->$ret_ty)? {
-                let s = SICSTUS.lock().unwrap();
+                let s = SICSTUS.as_ref();
                 (*s).dt.$field_name.unwrap()($($arg_name),*)
             }
         )+

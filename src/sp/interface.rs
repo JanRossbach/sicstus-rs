@@ -1,15 +1,16 @@
 //! This module contains the safe wrappers around the functions from the 'Foreign Interface' section.
 //! See <https://sicstus.sics.se/sicstus/docs/latest4/pdf/sicstus.pdf#cpg-top-fin>
 
+use alloc::string::{ToString, String};
+use alloc::vec::Vec;
+
 use super::sys::*;
 use super::{errors::sp_err_message, terms::sp_new_term_ref};
 use crate::error::PrologError;
 use crate::util::string_from_ref;
 
-use std::{
-    ffi::{c_uchar, c_void},
-    os::raw::{c_char, c_int},
-};
+use core::ffi::{c_char, c_int};
+use core::ffi::{c_uchar, c_void};
 
 /// Retrieve the Prolog ID corresponding to the given atom name.
 ///
@@ -189,7 +190,7 @@ pub fn sp_define_c_predicate(
 
 /// Returns a pointer to the
 pub fn sp_get_address(term: SP_term_ref) -> Result<*mut *mut c_void, PrologError> {
-    let p = std::ptr::null_mut();
+    let p = core::ptr::null_mut();
     let ret_val = unsafe { SP_get_address(term, p) };
     if ret_val == 0 {
         Err(PrologError::TermConversionError)
@@ -280,7 +281,7 @@ pub fn sp_get_number_codes(term: SP_term_ref, s: *mut *const c_char) -> c_int {
 /// * `Err(PrologError::TermConversionError)` - If the term reference could not be converted.
 pub fn sp_get_string(term_ref: SP_term_ref) -> Result<String, PrologError> {
     unsafe {
-        let mut s: *const c_char = std::ptr::null_mut();
+        let mut s: *const c_char = core::ptr::null_mut();
         let ret_val: c_int = SP_get_string(term_ref, &mut s as *mut *const c_char);
         if ret_val == 0 || s.is_null() {
             Err(PrologError::TermConversionError)

@@ -1,7 +1,10 @@
+use core::ffi::{c_int, c_char};
+
+use alloc::string::String;
+
 use crate::{error::PrologError, util::string_from_ref};
 
 use super::{terms::sp_new_term_ref, sys::*};
-use std::os::raw::{c_char, c_int};
 
 /// Get the error message from Prolog when a SP_ERROR is returned by a function.
 ///

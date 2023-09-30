@@ -1,5 +1,7 @@
+use core::ffi::c_char;
+
+use alloc::string::String;
 use regex::Regex;
-use std::ffi::c_char;
 
 /// Create a new [String] from a *const pointer to a C string.
 /// This does not take ownership of the pointer. The caller is responsible for freeing the memory.
@@ -23,7 +25,7 @@ pub unsafe fn string_from_ref(sp: *const c_char) -> String {
 #[cfg(test)]
 #[test]
 fn test_string_copy() {
-    use std::ffi::CString;
+    use alloc::{ffi::CString, string::ToString};
     let s: CString = CString::new("Hello, World!").expect("CString::new failed");
     let s: *const c_char = s.as_ptr();
     unsafe {

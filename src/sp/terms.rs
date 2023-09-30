@@ -1,7 +1,8 @@
 //! The functions relating to sections 12.2.9 and 12.2.10 of the Prolog manual.
 //! See <https://sicstus.sics.se/sicstus/docs/latest4/pdf/sicstus.pdf#cpg-top-tic>
 
-use std::ffi::c_int;
+
+use core::{cmp::Ordering, ffi::c_int};
 
 use crate::error::PrologError;
 
@@ -18,12 +19,12 @@ use super::sys::*;
 /// # Safety
 /// If Prolog returns a value that does not match the ones expected in the documentation this will panic.
 /// See also: <https://sicstus.sics.se/sicstus/docs/latest4/pdf/sicstus.pdf#ref-lte-cte>
-pub fn sp_compare(x: SP_term_ref, y: SP_term_ref) -> std::cmp::Ordering {
+pub fn sp_compare(x: SP_term_ref, y: SP_term_ref) -> Ordering {
     let res = unsafe { SP_compare(x, y) };
     match res {
-        -1 => std::cmp::Ordering::Less,
-        0 => std::cmp::Ordering::Equal,
-        1 => std::cmp::Ordering::Greater,
+        -1 => Ordering::Less,
+        0 => Ordering::Equal,
+        1 => Ordering::Greater,
         _ => panic!("Unexpected return value from SP_compare: {}", res),
     }
 }
@@ -109,6 +110,7 @@ pub fn sp_term_type(term: SP_term_ref) -> Result<c_int, PrologError> {
     }
 }
 
+/// Make the term a variable.
 pub fn sp_put_variable(term: SP_term_ref) -> Result<(), PrologError> {
     let ret_val = unsafe { SP_put_variable(term) };
     if ret_val == 0 {
@@ -118,8 +120,19 @@ pub fn sp_put_variable(term: SP_term_ref) -> Result<(), PrologError> {
     }
 }
 
+/// Make the term a float.
 pub fn sp_put_float(term: SP_term_ref, f: f64) -> Result<(), PrologError> {
     let ret_val = unsafe { SP_put_float(term, f) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError)
+    } else {
+        Ok(())
+    }
+}
+
+/// Make the term a float.
+pub fn sp_put_integer(term: SP_term_ref, i: i64) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_put_integer(term, i) };
     if ret_val == 0 {
         Err(PrologError::TermConversionError)
     } else {

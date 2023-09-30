@@ -1,3 +1,7 @@
+use core::error::Error;
+
+use alloc::string::String;
+
 use crate::sp::SP_term_ref;
 
 #[derive(Debug)]
@@ -25,4 +29,4 @@ impl core::fmt::Display for PrologError {
         write!(fmt, "{self:?}")
     }
 }
-impl std::error::Error for PrologError {}
+impl Error for PrologError {}

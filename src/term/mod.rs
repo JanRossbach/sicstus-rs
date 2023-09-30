@@ -1,9 +1,8 @@
-use std::cmp::Ordering;
-use std::marker::PhantomData;
+use core::cmp::Ordering;
+use core::marker::PhantomData;
 
 use crate::error::PrologError;
-use crate::sp::interface::sp_get_string;
-use crate::sp::terms::{sp_compare, sp_new_term_ref, sp_put_float, sp_put_variable, sp_term_type};
+use crate::sp::terms::{sp_compare, sp_new_term_ref, sp_put_float, sp_put_variable, sp_put_integer};
 use crate::sp::*;
 use crate::util::{is_valid_atom_name, is_valid_variable_name};
 
@@ -38,10 +37,6 @@ impl Term<Free> {
     }
 }
 
-#[test]
-fn term_test() {
-    let t = Term::new();
-}
 
 impl<Kind> Term<Kind> {
     pub fn to_term_ref(&self) -> SP_term_ref {
@@ -77,7 +72,7 @@ impl<Kind> Eq for Term<Kind> {}
 // }
 
 impl<Kind> PartialOrd for Term<Kind> {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         let s: SP_term_ref = self.term_ref;
         let o: SP_term_ref = other.term_ref;
         Some(sp_compare(s, o))
@@ -85,7 +80,7 @@ impl<Kind> PartialOrd for Term<Kind> {
 }
 
 impl<Kind> Ord for Term<Kind> {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    fn cmp(&self, other: &Self) -> Ordering {
         let r = self.partial_cmp(other);
         match r {
             Some(o) => o,
@@ -127,6 +122,7 @@ impl From<&str> for Term<Var> {
 impl From<i64> for Term<Integer> {
     fn from(i: i64) -> Self {
         let term_ref: SP_term_ref = sp_new_term_ref();
+        sp_put_integer(term_ref, i).unwrap();
         Term {
             term_ref,
             kind: PhantomData::<Integer>,

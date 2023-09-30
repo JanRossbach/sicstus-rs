@@ -50,7 +50,7 @@ fn generate_bindings(sicstus_root_dir: PathBuf, out_path: PathBuf) {
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
-    let bindings = bindgen::Builder::default()
+    let bindings = bindgen::Builder::default().use_core()
         // The input header we would like to generate
         // bindings for.
         .header(

@@ -3,8 +3,7 @@
 
 use super::sys::*;
 
-use std::ffi::c_char;
-use std::os::raw::{c_int, c_void};
+use core::ffi::{c_char, c_int, c_void};
 
 pub fn sp_expand_file_name(
     relpath: *const c_char,

@@ -1,4 +1,8 @@
 //! High Level API for SICStus Prolog.
+#![no_std]
+#![feature(error_in_core)]
+
+extern crate alloc;
 
 mod error;
 
@@ -6,7 +10,6 @@ pub mod sp;
 
 pub mod term;
 mod util;
-pub mod prolog;
 
 // #[cfg(test)]
 // mod test_utils {
