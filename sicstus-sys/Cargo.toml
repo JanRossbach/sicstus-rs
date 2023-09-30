@@ -11,6 +11,8 @@ bindgen = "0.65.1"
 
 [dependencies]
 lazy_static = "1.4.0"
+custom-print = { version="1.0.0", default-features=false }
 
 [features]
 alloc = []
+print = []

@@ -18,3 +18,4 @@ sicstus-sys = { path = "./sicstus-sys", version = "0.1.0" }
 
 [features]
 alloc = ["sicstus-sys/alloc"]
+print = ["sicstus-sys/print"]

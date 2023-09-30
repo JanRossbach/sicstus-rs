@@ -76,13 +76,13 @@ macro_rules! define_dispatch_fns {
     ) => {
         $(
             pub unsafe fn $name($($arg_name: $arg_ty),*) $(->$ret_ty)? {
-                SICSTUS.dt.$field_name.unwrap()($($arg_name),*)
+                SICSTUS.dt.$field_name.expect("Crashed getting function from dipatch table")($($arg_name),*)
             }
         )+
     }
 }
 
-define_dispatch_fns!(
+define_dispatch_fns! {
     #[field_name=(pSP_atom_from_string)]
     SP_atom_from_string(str: *const c_char) -> SP_atom,
     #[field_name=(pSP_atom_length)]
@@ -416,7 +416,7 @@ define_dispatch_fns!(
      SP_fail(),
     #[field_name=(pSP_fclose)]
     SP_fclose(stream: *mut SP_stream, close_options: spio_t_bits) -> spio_t_error_code
-);
+}
 
 // TODO Fix this
 pub mod variadic {
@@ -441,6 +441,7 @@ pub mod variadic {
     }
 }
 
+
 #[cfg(feature="alloc")]
 use core::alloc::{GlobalAlloc, Layout};
 
@@ -461,3 +462,11 @@ unsafe impl GlobalAlloc for SICStusAllocator {
         SP_realloc(ptr as *mut c_void, new_size) as *mut u8
     }
 }
+
+#[cfg(feature="print")]
+custom_print::define_macros!({ print, println }, fmt, |value: &str| {
+    let c_str = std::ffi::CString::new(value).unwrap();
+    unsafe {
+        SP_printf(c_str.as_ptr());
+    }
+});
