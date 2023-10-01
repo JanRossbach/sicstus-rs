@@ -72,7 +72,8 @@ macro_rules! define_dispatch_fns {
         #[field_name=($field_name:ident)] //  This is the name of DISPATCH_TABLE_STRUCT_SICSTUS_H struct from the bindings
             $name:ident ( $( $arg_name:ident : $arg_ty:ty ),* $(,)? )
             $( -> $ret_ty:ty )?
-        ),+
+        ),+ $(,)? // This allows a trailing comma
+
     ) => {
         $(
             pub unsafe fn $name($($arg_name: $arg_ty),*) $(->$ret_ty)? {
@@ -415,40 +416,33 @@ define_dispatch_fns! {
     #[field_name=(pSP_fail)]
      SP_fail(),
     #[field_name=(pSP_fclose)]
-    SP_fclose(stream: *mut SP_stream, close_options: spio_t_bits) -> spio_t_error_code
+    SP_fclose(stream: *mut SP_stream, close_options: spio_t_bits) -> spio_t_error_code,
 }
 
-// TODO Fix this
-pub mod variadic {
-    use core::ffi::{c_char, c_int};
+extern "C" {
+    pub fn SP_cons_functor(
+        term: SP_term_ref,
+        name: SP_atom,
+        arity: c_int,
+        arg: SP_term_ref,
+        ...
+    ) -> c_int;
 
-    pub use super::{spio_t_error_code, SP_atom, SP_pred_ref, SP_qid, SP_stream, SP_term_ref};
-
-    extern "C" {
-        pub fn SP_cons_functor(
-            term: SP_term_ref,
-            name: SP_atom,
-            arity: c_int,
-            arg: SP_term_ref,
-            ...
-        ) -> c_int;
-
-        pub fn SP_fprintf(stream: *mut SP_stream, fmt: *const c_char, ...) -> spio_t_error_code;
-        pub fn SP_open_query(predicate: SP_pred_ref, arg1: SP_term_ref, ...) -> SP_qid;
-        pub fn SP_printf(fmt: *const c_char, ...) -> spio_t_error_code;
-        pub fn SP_query(predicate: SP_pred_ref, arg1: SP_term_ref, ...) -> c_int;
-        pub fn SP_query_cut_fail(predicate: SP_pred_ref, arg1: SP_term_ref, ...) -> c_int;
-    }
+    pub fn SP_fprintf(stream: *mut SP_stream, fmt: *const c_char, ...) -> spio_t_error_code;
+    pub fn SP_open_query(predicate: SP_pred_ref, arg1: SP_term_ref, ...) -> SP_qid;
+    pub fn SP_printf(fmt: *const c_char, ...) -> spio_t_error_code;
+    pub fn SP_query(predicate: SP_pred_ref, arg1: SP_term_ref, ...) -> c_int;
+    pub fn SP_query_cut_fail(predicate: SP_pred_ref, arg1: SP_term_ref, ...) -> c_int;
 }
 
 
-#[cfg(feature="alloc")]
+// #[cfg(feature="alloc")]
 use core::alloc::{GlobalAlloc, Layout};
 
-#[cfg(feature="alloc")]
+// #[cfg(feature="alloc")]
 pub struct SICStusAllocator;
 
-#[cfg(feature="alloc")]
+// #[cfg(feature="alloc")]
 unsafe impl GlobalAlloc for SICStusAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         SP_malloc(layout.size()) as *mut u8
@@ -463,7 +457,7 @@ unsafe impl GlobalAlloc for SICStusAllocator {
     }
 }
 
-#[cfg(feature="print")]
+// #[cfg(feature="print")]
 custom_print::define_macros!({ print, println }, fmt, |value: &str| {
     let c_str = std::ffi::CString::new(value).unwrap();
     unsafe {

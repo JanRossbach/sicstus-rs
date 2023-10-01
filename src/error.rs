@@ -1,32 +1,7 @@
-use core::error::Error;
-
-use alloc::string::String;
-
-use crate::sp::SP_term_ref;
+use crate::sys::PrologError;
 
 #[derive(Debug)]
-pub enum PrologError {
-    TermConversionError,
-    NoTermVariantMatch,
-    AtomNotFound(String),
-    CloseQueryError(String),
-    UnexpectedReturnCode(i32),
-    NoExceptionTerm(SP_term_ref),
-    UncussefulUnificationError(i32, i32),
-    ConsFunctorError,
-    QueryOpenUnsuccessful,
-    PredicateNotFound,
-    NextSolutionError(String),
-    NoMoreSolutions,
-    CutQueryError(String),
-    CutQueryFailure,
-    DefineCPredicateError,
+pub enum SrsError {
+    /// An error that occurred in the SICStus Prolog C API.
+    PlError(PrologError),
 }
-
-// region:    --- Error Boilerplate
-impl core::fmt::Display for PrologError {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        write!(fmt, "{self:?}")
-    }
-}
-impl Error for PrologError {}

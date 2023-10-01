@@ -1,10 +1,9 @@
 use core::cmp::Ordering;
 use core::marker::PhantomData;
 
-use crate::error::PrologError;
-use crate::sp::terms::{sp_compare, sp_new_term_ref, sp_put_float, sp_put_variable, sp_put_integer};
-use crate::sp::*;
+use crate::error::SrsError;
 use crate::util::{is_valid_atom_name, is_valid_variable_name};
+use crate::sys::*;
 
 /// A Term that represents a Free Term Ref that has not been assigned yet.
 pub struct Free;
@@ -28,12 +27,23 @@ impl Term<Free> {
         }
     }
 
-    pub fn to_variable(self) -> Result<Term<Var>, PrologError> {
-        sp_put_variable(self.term_ref)?;
+    pub fn to_variable(self) -> Result<Term<Var>, SrsError> {
+        sp_put_variable(self.term_ref).map_err(|e| SrsError::PlError(e))?;
         Ok(Term {
             term_ref: self.term_ref,
             kind: PhantomData::<Var>,
         })
+    }
+}
+
+impl<Kind> Clone for Term<Kind> {
+    fn clone(&self) -> Self {
+        let term_ref = sp_new_term_ref();
+        sp_put_term(term_ref, self.term_ref).unwrap();
+        Term {
+            term_ref,
+            kind: PhantomData::<Kind>,
+        }
     }
 }
 
@@ -163,12 +173,12 @@ impl From<f64> for Term<Float> {
 // }
 
 // impl TryFrom<SP_term_ref> for Term {
-//     type Error = PrologError;
-//     fn try_from(term_ref: SP_term_ref) -> Result<Term, PrologError> {
+//     type Error = SrsError;
+//     fn try_from(term_ref: SP_term_ref) -> Result<Term, SrsError> {
 //         let term_type: i32 = sp_term_type(term_ref)?;
 //         match term_type
 //             .try_into() // converting i32 to u32 might Fail but usually shouldn't
-//             .map_err(|_| PrologError::TermConversionError)?
+//             .map_err(|_| SrsError::TermConversionError)?
 //         {
 //             SP_TYPE_VARIABLE => {
 //                 let name = sp_get_string(term_ref)?;
@@ -202,7 +212,7 @@ impl From<f64> for Term<Float> {
 //             SP_TYPE_COMPOUND => {
 //                 unimplemented!()
 //             }
-//             _ => Err(PrologError::TermConversionError),
+//             _ => Err(SrsError::TermConversionError),
 //         }
 //     }
 // }

@@ -14,8 +14,9 @@ mockall_double = "0.3.0"
 [dependencies]
 lazy_static = "1.4.0"
 regex = "1.9.5"
-sicstus-sys = { path = "./sicstus-sys", version = "0.1.0" }
+sicstus-sys = { path = "./sicstus-sys", version = "0.1.0" , features = ["alloc", "print"]}
 
 [features]
+default = ["alloc", "print"]
 alloc = ["sicstus-sys/alloc"]
 print = ["sicstus-sys/print"]
