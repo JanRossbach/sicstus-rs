@@ -868,6 +868,18 @@ pub fn sp_term_type(term: SP_term_ref) -> Result<c_int, PrologError> {
     }
 }
 
+pub fn sp_put_atom(term: SP_term_ref, atom: SP_atom) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_put_atom(term, atom) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError(format!(
+            "Failed putting atom {} into term {:?}",
+            atom, term
+        )))
+    } else {
+        Ok(())
+    }
+}
+
 /// Make the term a variable.
 pub fn sp_put_variable(term: SP_term_ref) -> Result<(), PrologError> {
     let ret_val = unsafe { SP_put_variable(term) };

@@ -1,7 +1,7 @@
 use crate::sys::PrologError;
 
 #[derive(Debug)]
-pub enum SrsError {
+pub enum SicstusRsError {
     /// An error that occurred in the SICStus Prolog C API.
-    PlError(PrologError),
+    InternalError(PrologError),
 }

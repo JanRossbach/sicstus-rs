@@ -458,9 +458,10 @@ unsafe impl GlobalAlloc for SICStusAllocator {
 }
 
 // #[cfg(feature="print")]
-custom_print::define_macros!({ print, println }, fmt, |value: &str| {
-    let c_str = std::ffi::CString::new(value).unwrap();
-    unsafe {
-        SP_printf(c_str.as_ptr());
-    }
-});
+// custom_print::define_macros!({ print, println }, fmt, |value: &str| {
+//     let c_str = std::ffi::CString::new(value).unwrap();
+//     unsafe {
+//         SP_printf("hello".as_ptr());
+//         SP_printf(c_str.as_ptr());
+//     }
+// });

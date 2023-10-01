@@ -9,7 +9,7 @@ mod error;
 
 pub mod sys;
 
-pub mod term;
+pub mod terms;
 mod util;
 pub mod query;
 pub mod predicate;
