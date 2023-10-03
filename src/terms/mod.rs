@@ -1,7 +1,6 @@
 use core::cmp::Ordering;
 use core::marker::PhantomData;
 
-use crate::error::SicstusRsError;
 use crate::sys::*;
 use crate::util::is_valid_variable_name;
 
@@ -19,11 +18,13 @@ pub use atom::Atom;
 pub use compound::Compound;
 pub use float::Float;
 pub use integer::Integer;
+use sicstus_sys::SP_register_atom;
 pub use variable::Var;
 
 #[derive(Debug)]
 pub struct Term<Kind = Free> {
     pub term_ref: SP_term_ref,
+    pub atom: Option<SP_atom>,
     pub kind: PhantomData<Kind>, // 0 size type marker to differentiate term kinds like Atom, Integer or Compound
 }
 
@@ -31,16 +32,33 @@ impl Term<Free> {
     pub fn new() -> Self {
         Term {
             term_ref: sp_new_term_ref(),
+            atom: None,
             kind: PhantomData::<Free>,
         }
     }
 
-    pub fn to_variable(self) -> Result<Term<Var>, SicstusRsError> {
-        sp_put_variable(self.term_ref).map_err(|e| SicstusRsError::InternalError(e))?;
-        Ok(Term {
+    pub fn variable(self) -> Term<Var> {
+        sp_put_variable(self.term_ref).expect("Failed to put variable"); // Create a variable
+        assert!(sp_is_variable(self.term_ref)); // Make sure the variable was created correctly
+        Term {
             term_ref: self.term_ref,
+            atom: None,
             kind: PhantomData::<Var>,
-        })
+        }
+    }
+
+    pub fn atom(self, name: &str) {
+        assert!(is_valid_variable_name(name));
+        if let Ok(atom) = sp_atom_from_string(name) {
+            sp_put_atom(self.term_ref, atom).expect("Failed to put atom");
+            assert!(sp_is_atom(self.term_ref));
+        } else {
+            // sp_register_atom(name);
+        }
+
+        // let atom = sp_atom_from_string(name).expect("Failed to create atom");
+        // sp_put_atom(self.term_ref, atom).expect("Failed to put atom");
+        // assert!(sp_is_atom(self.term_ref));
     }
 }
 
@@ -50,6 +68,7 @@ impl<Kind> Clone for Term<Kind> {
         sp_put_term(term_ref, self.term_ref).unwrap();
         Term {
             term_ref,
+            atom: self.atom,
             kind: PhantomData::<Kind>,
         }
     }

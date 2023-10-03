@@ -59,13 +59,14 @@ mod error {
     impl Error for PrologError {}
 }
 
-pub use error::PrologError;
 use alloc::format;
+pub use error::PrologError;
 use sicstus_sys::*;
 
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
+use crate::error::SicstusRsError;
 use crate::util::string_from_ref;
 
 use core::cmp::Ordering;
@@ -73,6 +74,22 @@ use core::ffi::{c_char, c_int};
 use core::ffi::{c_uchar, c_void};
 
 use super::*;
+
+/// TODO ALERT! Not working yet at all!
+pub fn sp_initialze(argc: usize, argv: Vec<String>) -> Result<(), SicstusRsError> {
+    unsafe {
+        let ret_val = SP_initialize(
+            argc as c_int,
+            argv.as_ptr() as *mut *mut c_char,
+            core::ptr::null_mut(),
+        );
+        if ret_val == SP_FAILURE as i32 {
+            Err(SicstusRsError::InitializationError(sp_err_message()))
+        } else {
+            Ok(())
+        }
+    }
+}
 
 /// Get the error message from Prolog when a SP_ERROR is returned by a function.
 ///
@@ -216,6 +233,7 @@ pub fn sp_cons_functor(name: SP_atom, args: &[SP_term_ref]) -> Result<SP_term_re
     }
 }
 
+/// Not implemented, use [sp_cons_functor] instead.
 pub fn sp_cons_functor_array() -> c_int {
     unimplemented!(
         "Use sp_cons_functor instead, since it already uses the array version of the C API."
@@ -332,9 +350,25 @@ pub fn sp_get_arg(i: usize, term: SP_term_ref) -> Result<SP_term_ref, PrologErro
     }
 }
 
-// TODO
-pub fn sp_get_atom(term: SP_term_ref, atom: *mut SP_atom) -> c_int {
-    unsafe { SP_get_atom(term, atom) }
+/// Get the canoncial represenation of an atom.
+///
+/// # Arguments
+/// * term - The term representing the atom.
+///
+/// # Returns
+/// Ok(SP_atom) of the canonical representation of the atom if the conversion was successful, and Err otherwise.
+pub fn sp_get_atom(term: SP_term_ref) -> Result<SP_atom, PrologError> {
+    let mut atom = SP_atom::default();
+    let atom_ptr = &mut atom as *mut SP_atom;
+    let ret_val = unsafe { SP_get_atom(term, atom_ptr) as u32 };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError(format!(
+            "Could not convert term {:?} to an atom.",
+            term
+        )))
+    } else {
+        Ok(atom)
+    }
 }
 
 // pub fn SP_get_float(term: SP_term_ref, f: *mut f64) -> c_int;

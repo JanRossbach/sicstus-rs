@@ -20,6 +20,8 @@ use core::ffi::c_int;
 use core::ffi::c_uchar;
 use core::ffi::c_void;
 
+use bindings::SP_GLUE_INITIALIZE_OPTION_RESTORE;
+use bindings::SP_MainFun;
 use bindings::SP_get_dispatch_40800;
 use bindings::DISPATCH_TABLE_STRUCT_SICSTUS_H;
 pub use bindings::{
@@ -334,8 +336,16 @@ define_dispatch_fns! {
     SP_unify(term1: SP_term_ref, term2: SP_term_ref) -> c_int,
     #[field_name=(pSP_unregister_atom)]
     SP_unregister_atom(atom: SP_atom) -> c_int,
-    // #[field_name=(pSP_initialize)]
-    // SP_initialize(argc: c_int, argv: *mut *mut c_char) -> c_int,
+    #[field_name=(psp_glue_initialize)]
+    sp_glue_initialize(
+        argc: c_int,
+        argv: *mut *mut c_char,
+        options: *const SP_options,
+        sp_pre_linkage: *mut SP_MainFun,
+        sp_pre_map: *mut *mut c_char,
+        spld_dsp: c_int,
+        sp_glue_initialize_option_restore: c_int,
+    ) -> c_int,
     // #[field_name=(p)]
     // user_close(
     //     puser_data: *mut *mut c_void,
@@ -435,14 +445,27 @@ extern "C" {
     pub fn SP_query_cut_fail(predicate: SP_pred_ref, arg1: SP_term_ref, ...) -> c_int;
 }
 
+pub fn SP_initialize(argc: c_int, argv: *mut *mut c_char, options: *const SP_options) -> c_int {
+    unsafe {
+        sp_glue_initialize(
+            argc,
+            argv,
+            options,
+            core::ptr::null_mut(),
+            core::ptr::null_mut(),
+            0,
+            SP_GLUE_INITIALIZE_OPTION_RESTORE as c_int,
+        )
+    }
+}
 
-// #[cfg(feature="alloc")]
+#[cfg(feature="alloc")]
 use core::alloc::{GlobalAlloc, Layout};
 
-// #[cfg(feature="alloc")]
+#[cfg(feature="alloc")]
 pub struct SICStusAllocator;
 
-// #[cfg(feature="alloc")]
+#[cfg(feature="alloc")]
 unsafe impl GlobalAlloc for SICStusAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         SP_malloc(layout.size()) as *mut u8
@@ -457,11 +480,10 @@ unsafe impl GlobalAlloc for SICStusAllocator {
     }
 }
 
-// #[cfg(feature="print")]
 // custom_print::define_macros!({ print, println }, fmt, |value: &str| {
 //     let c_str = std::ffi::CString::new(value).unwrap();
 //     unsafe {
-//         SP_printf("hello".as_ptr());
+//         panic!("Print not implemented");
 //         SP_printf(c_str.as_ptr());
 //     }
 // });

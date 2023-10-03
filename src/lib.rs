@@ -13,6 +13,7 @@ pub mod terms;
 mod util;
 pub mod query;
 pub mod predicate;
+pub mod stash;
 
 #[cfg(feature="alloc")]
 use sicstus_sys::SICStusAllocator;
