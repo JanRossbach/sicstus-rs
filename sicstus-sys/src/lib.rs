@@ -20,10 +20,10 @@ use core::ffi::c_int;
 use core::ffi::c_uchar;
 use core::ffi::c_void;
 
-use bindings::SP_GLUE_INITIALIZE_OPTION_RESTORE;
 use bindings::SP_MainFun;
 use bindings::SP_get_dispatch_40800;
 use bindings::DISPATCH_TABLE_STRUCT_SICSTUS_H;
+use bindings::SP_GLUE_INITIALIZE_OPTION_RESTORE;
 pub use bindings::{
     spio_t_bits, spio_t_error_code, spio_t_offset, spio_t_simple_device_close,
     spio_t_simple_device_flush_output, spio_t_simple_device_interrupt, spio_t_simple_device_ioctl,
@@ -45,7 +45,7 @@ lazy_static! {
 unsafe impl Send for Sicstus {}
 unsafe impl Sync for Sicstus {}
 
-struct Sicstus {
+pub struct Sicstus {
     _sicstus: *mut SICSTUS_API_STRUCT,
     dt: DISPATCH_TABLE_STRUCT_SICSTUS_H,
 }
@@ -346,30 +346,6 @@ define_dispatch_fns! {
         spld_dsp: c_int,
         sp_glue_initialize_option_restore: c_int,
     ) -> c_int,
-    // #[field_name=(p)]
-    // user_close(
-    //     puser_data: *mut *mut c_void,
-    //     close_options: spio_t_bits,
-    // ) -> spio_t_error_code,
-    // #[field_name=(pSP_atom_from_string)]
-    // user_flush_output(
-    //     user_data: *mut c_void,
-    //     flush_options: spio_t_bits,
-    // ) -> spio_t_error_code,
-    // #[field_name=(pSP_atom_from_string)]
-    // user_read(
-    //     user_data: *mut c_void,
-    //     buf: *mut c_void,
-    //     pbuf_size: *mut usize,
-    //     read_options: spio_t_bits,
-    // ) -> spio_t_error_code,
-    // #[field_name=(pSP_atom_from_string)]
-    // user_write(
-    //     user_data: *mut c_void,
-    //     buf: *const c_void,
-    //     pbuf_size: *mut usize,
-    //     write_options: spio_t_bits,
-    // ) -> spio_t_error_code,
     #[field_name=(pSP_close_query)]
      SP_close_query(query: SP_qid) -> c_int,
     #[field_name=(pSP_compare)]
@@ -429,22 +405,69 @@ define_dispatch_fns! {
     SP_fclose(stream: *mut SP_stream, close_options: spio_t_bits) -> spio_t_error_code,
 }
 
-extern "C" {
-    pub fn SP_cons_functor(
-        term: SP_term_ref,
-        name: SP_atom,
-        arity: c_int,
-        arg: SP_term_ref,
-        ...
-    ) -> c_int;
-
-    pub fn SP_fprintf(stream: *mut SP_stream, fmt: *const c_char, ...) -> spio_t_error_code;
-    pub fn SP_open_query(predicate: SP_pred_ref, arg1: SP_term_ref, ...) -> SP_qid;
-    pub fn SP_printf(fmt: *const c_char, ...) -> spio_t_error_code;
-    pub fn SP_query(predicate: SP_pred_ref, arg1: SP_term_ref, ...) -> c_int;
-    pub fn SP_query_cut_fail(predicate: SP_pred_ref, arg1: SP_term_ref, ...) -> c_int;
+pub fn sicstus() -> &'static Sicstus {
+    &SICSTUS
 }
 
+// The C variadic functions become macros in Rust.
+
+#[macro_export]
+macro_rules! SP_cons_functor {
+    ($term:expr,$atom:expr,$arity:expr,$($arg:expr),*) => {
+        unsafe {
+            $crate::sicstus().dt.pSP_cons_functor($term,$atom,$arity,$($arg),*)
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! SP_fprintf {
+    ($stream:expr,$fmt:expr,$($arg:expr),*) => {
+        unsafe {
+            $crate::sicstus().dt.pSP_fprintf($stream,$fmt,$($arg),*)
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! SP_open_query {
+    ($predicate:expr,$($arg:expr),*) => {
+        unsafe {
+            $crate::sicstus().dt.pSP_open_query($predicate,$($arg),*)
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! SP_printf {
+    ($fmt:expr,$($arg:expr),*) => {
+        unsafe {
+            $crate::sicstus().dt.pSP_printf($fmt,$($arg),*)
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! SP_query {
+    ($predicate:expr,$($arg:expr),*) => {
+        unsafe {
+            $crate::sicstus().dt.pSP_query($predicate,$($arg),*)
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! SP_query_cut_fail {
+    ($predicate:expr,$($arg:expr),*) => {
+        unsafe {
+            $crate::sicstus().dt.pSP_query_cut_fail($predicate,$($arg),*)
+        }
+    }
+}
+
+
+// TODO Maybe make this work?
+/// In C This function starts the SICStus Prolog runtime. In rust it does not export properly. Do not use.
 pub fn SP_initialize(argc: c_int, argv: *mut *mut c_char, options: *const SP_options) -> c_int {
     unsafe {
         sp_glue_initialize(
@@ -459,13 +482,16 @@ pub fn SP_initialize(argc: c_int, argv: *mut *mut c_char, options: *const SP_opt
     }
 }
 
-#[cfg(feature="alloc")]
+// It is recommended to use the sicstus memory management functions instead of the Rust ones in order to
+// avoid memory fragmentation. In order to use the Rust allocator you can disable the alloc feature.
+
+#[cfg(feature = "alloc")]
 use core::alloc::{GlobalAlloc, Layout};
 
-#[cfg(feature="alloc")]
+#[cfg(feature = "alloc")]
 pub struct SICStusAllocator;
 
-#[cfg(feature="alloc")]
+#[cfg(feature = "alloc")]
 unsafe impl GlobalAlloc for SICStusAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         SP_malloc(layout.size()) as *mut u8
@@ -479,11 +505,3 @@ unsafe impl GlobalAlloc for SICStusAllocator {
         SP_realloc(ptr as *mut c_void, new_size) as *mut u8
     }
 }
-
-// custom_print::define_macros!({ print, println }, fmt, |value: &str| {
-//     let c_str = std::ffi::CString::new(value).unwrap();
-//     unsafe {
-//         panic!("Print not implemented");
-//         SP_printf(c_str.as_ptr());
-//     }
-// });
