@@ -45,9 +45,16 @@ lazy_static! {
 unsafe impl Send for Sicstus {}
 unsafe impl Sync for Sicstus {}
 
+#[derive(Debug)]
 pub struct Sicstus {
     _sicstus: *mut SICSTUS_API_STRUCT,
     dt: DISPATCH_TABLE_STRUCT_SICSTUS_H,
+}
+
+impl Sicstus {
+    unsafe fn get_stash(&self) -> *mut c_void {
+        (*(self._sicstus)).stash
+    }
 }
 
 impl Sicstus {
@@ -101,8 +108,6 @@ define_dispatch_fns! {
         options: spio_t_bits,
         pstream: *mut *mut SP_stream
     ) -> spio_t_error_code,
-    // #[field_name=(pSP_atom_from_string)]
-    // SP_foreign_stash() -> *mut c_void,
     #[field_name=(pSP_free)]
     SP_free(ptr: *mut c_void),
     #[field_name=(pSP_get_address)]
@@ -224,8 +229,6 @@ define_dispatch_fns! {
     SP_put_address(term: SP_term_ref, pointer: *mut c_void) -> c_int,
     #[field_name=(pSP_put_atom)]
     SP_put_atom(term: SP_term_ref, atom: SP_atom) -> c_int,
-    // #[field_name=(pSP_put_byte)]
-    // SP_put_byte(stream: *mut SP_stream, item: c_uint) -> spio_t_error_code,
     #[field_name=(pSP_put_bytes)]
     SP_put_bytes(
         strea: *mut SP_stream,
@@ -233,8 +236,6 @@ define_dispatch_fns! {
         byte_count: usize,
         options: spio_t_bits,
     ) -> spio_t_error_code,
-    // #[field_name=(pSP_put_code)]
-    // SP_put_code(stream: *mut SP_stream, item: c_int) -> spio_t_error_code,
     #[field_name=(pSP_put_codes)]
     SP_put_codes(
         strea: *mut SP_stream,
@@ -409,6 +410,11 @@ pub fn sicstus() -> &'static Sicstus {
     &SICSTUS
 }
 
+/// Get a raw void pointer to the SICStus foreign stash.
+pub unsafe fn SP_foreign_stash() -> *mut c_void {
+    sicstus().get_stash()
+}
+
 // The C variadic functions become macros in Rust.
 
 #[macro_export]
@@ -464,7 +470,6 @@ macro_rules! SP_query_cut_fail {
         }
     }
 }
-
 
 // TODO Maybe make this work?
 /// In C This function starts the SICStus Prolog runtime. In rust it does not export properly. Do not use.

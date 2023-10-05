@@ -1,2 +1,2 @@
 #[derive(Debug)]
-pub struct Compound;
+pub struct List {}

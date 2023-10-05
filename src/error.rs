@@ -7,4 +7,6 @@ pub enum SicstusRsError {
     /// An error that occurred in the SICStus Prolog C API.
     InternalError(PrologError),
     InitializationError(String),
+    AtomNotFound(PrologError),
+    InvalidName(String),
 }

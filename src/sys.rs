@@ -20,6 +20,8 @@ pub use sicstus_sys::{
     SP_TYPE_COMPOUND, SP_TYPE_ERROR, SP_TYPE_FLOAT, SP_TYPE_INTEGER, SP_TYPE_VARIABLE,
 };
 
+pub use sicstus_sys::SP_printf;
+
 mod error {
     use core::error::Error;
 
@@ -45,6 +47,8 @@ mod error {
         CutQueryFailure,
         DefineCPredicateError,
         TypeCheckError,
+        AtomRegistrationError(u64),
+        AtomUnregistrationError(u64),
     }
 
     // region:    --- Error Boilerplate
@@ -499,6 +503,20 @@ pub fn sp_next_solution(query: SP_qid) -> Result<(), PrologError> {
     } else {
         Err(PrologError::UnexpectedReturnCode(ret_val))
     }
+}
+
+#[macro_export]
+macro_rules! open_query {
+    ($pred:expr,$($arg:expr),*) => {
+        unsafe {
+            let rewopar_valkjdasöfl = SP_open_query($pred, $($arg),*);
+            if rewopar_valkjdasöfl == 0 {
+                Err(PrologError::QueryOpenUnsuccessful)
+            } else {
+                Ok(rewopar_valkjdasöfl)
+            }
+        }
+    };
 }
 
 /// Sets up a query for use by [SP_next_solution]. [SP_close_query] and [SP_cut_query]. Only supports arg arrays up to 15 args.
@@ -976,6 +994,32 @@ pub fn sp_put_term(to: SP_term_ref, from: SP_term_ref) -> Result<(), PrologError
             "Failed putting term {:?} into term {:?}",
             from, to
         )))
+    } else {
+        Ok(())
+    }
+}
+
+/// Obtain the encoded string holding the characters of a Prolog atom.
+pub fn sp_string_from_atom(atom: SP_atom) -> String {
+    let s: *const c_char = unsafe { SP_string_from_atom(atom) };
+    unsafe { string_from_ref(s) }
+}
+
+/// Registers the atom *atom* with the Prolog memory manager by incrementing its reference count.
+pub fn sp_register_atom(atom: SP_atom) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_register_atom(atom) };
+    if ret_val == 0 {
+        Err(PrologError::AtomRegistrationError(atom))
+    } else {
+        Ok(())
+    }
+}
+
+/// Unregisters the atom *atom* with the Prolog memory manager by decrementing its reference count.
+pub fn sp_unregister_atom(atom: SP_atom) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_unregister_atom(atom) };
+    if ret_val == 0 {
+        Err(PrologError::AtomUnregistrationError(atom))
     } else {
         Ok(())
     }
