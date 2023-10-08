@@ -400,6 +400,24 @@ pub fn sp_get_integer(term_ref: SP_term_ref) -> Result<i64, PrologError> {
     }
 }
 
+/// Save wrapper around the unsafe [SP_get_float] function from Prolog.
+/// If the term is an Integer that does not fit in a double, then the call will fail.
+pub fn sp_get_float(term: SP_term_ref) -> Result<f64, PrologError> {
+    unsafe {
+        let mut f: f64 = 0.0;
+        let p: *mut f64 = &mut f;
+        let ret_val: c_int = SP_get_float(term, p);
+        if ret_val == 0 {
+            Err(PrologError::TermConversionError(format!(
+                "Could not retrieve term {:?} as a float.",
+                term
+            )))
+        } else {
+            Ok(f)
+        }
+    }
+}
+
 pub fn sp_get_integer_bytes(
     term: SP_term_ref,
     buf: *mut c_void,
@@ -528,38 +546,38 @@ macro_rules! open_query {
 /// # Description
 /// This function still contains a very ugly hack because Rust does not support this type of syntax.
 /// If you want larger queries, call into the C API directly.
-pub fn sp_open_query(
-    predicate: SP_pred_ref,
-    args: Vec<SP_term_ref>,
-) -> Result<SP_qid, PrologError> {
-    // TODO Rewrite with proc macro
-    unsafe {
-        let result = match args.len() {
-            0 => panic!("Not enough arguments!"),
-            1 => SP_open_query(predicate, args[0]),
-            2 => SP_open_query(predicate, args[0], args[1]),
-            3 => SP_open_query(predicate, args[0], args[1], args[2]),
-            4 => SP_open_query(predicate, args[0], args[1], args[2], args[3]),
-            5 => SP_open_query(predicate, args[0], args[1], args[2], args[3], args[4]),
-            6 => SP_open_query(predicate, args[0], args[1], args[2], args[3], args[4], args[5]),
-            7 => SP_open_query(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6]),
-            8 => SP_open_query(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]),
-            9 => SP_open_query(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]),
-            10 => SP_open_query(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]),
-            11 => SP_open_query(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10]),
-            12 => SP_open_query(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11]),
-            13 => SP_open_query(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12]),
-            14 => SP_open_query(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13]),
-            15 => SP_open_query(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14]),
-            _ => panic!("Queries of more than 15 args are not supported by the wrapper API. For large Queries call the C API directly"),
-        };
-        if result == 0 {
-            Err(PrologError::QueryOpenUnsuccessful)
-        } else {
-            Ok(result)
-        }
-    }
-}
+// pub fn sp_open_query(
+//     predicate: SP_pred_ref,
+//     args: Vec<SP_term_ref>,
+// ) -> Result<SP_qid, PrologError> {
+//     // TODO Rewrite with proc macro
+//     unsafe {
+//         let result = match args.len() {
+//             0 => panic!("Not enough arguments!"),
+//             1 => SP_open_query!(predicate, args[0]),
+//             2 => SP_open_query!(predicate, args[0], args[1]),
+//             3 => SP_open_query!(predicate, args[0], args[1], args[2]),
+//             4 => SP_open_query!(predicate, args[0], args[1], args[2], args[3]),
+//             5 => SP_open_query!(predicate, args[0], args[1], args[2], args[3], args[4]),
+//             6 => SP_open_query!(predicate, args[0], args[1], args[2], args[3], args[4], args[5]),
+//             7 => SP_open_query!(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6]),
+//             8 => SP_open_query!(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]),
+//             9 => SP_open_query!(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]),
+//             10 => SP_open_query!(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]),
+//             11 => SP_open_query!(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10]),
+//             12 => SP_open_query!(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11]),
+//             13 => SP_open_query!(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12]),
+//             14 => SP_open_query!(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13]),
+//             15 => SP_open_query!(predicate, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14]),
+//             _ => panic!("Queries of more than 15 args are not supported by the wrapper API. For large Queries call the C API directly"),
+//         };
+//         if result == 0 {
+//             Err(PrologError::QueryOpenUnsuccessful)
+//         } else {
+//             Ok(result)
+//         }
+//     }
+// }
 
 /// Returns a pointer to the predicate definition.
 ///

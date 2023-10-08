@@ -2,7 +2,7 @@ use core::cmp::Ordering;
 
 use alloc::string::String;
 
-use crate::sys::*;
+use crate::{sys::*, util::is_valid_atom_name};
 
 use super::Term;
 
@@ -14,7 +14,8 @@ pub struct Atom {
 }
 
 impl Atom {
-    fn new(name: String) -> Self {
+    pub fn new(name: String) -> Self {
+        assert!(is_valid_atom_name(&name));
         let term_ref = sp_new_term_ref();
         let atom_id = sp_atom_from_string(&name).unwrap();
         sp_register_atom(atom_id).unwrap();
@@ -25,11 +26,11 @@ impl Atom {
         }
     }
 
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         sp_atom_length(self.atom_id)
     }
 
-    fn atom_id(&self) -> SP_atom {
+    pub fn atom_id(&self) -> SP_atom {
         self.atom_id
     }
 

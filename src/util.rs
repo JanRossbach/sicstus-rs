@@ -37,6 +37,7 @@ fn test_string_copy() {
     assert_eq!(copied_string, "Hello, World!".to_string());
 }
 
+#[allow(dead_code)]
 pub fn is_valid_atom_name(name: &str) -> bool {
     // TODO Check for correct bracket pairs
     let re = Regex::new(r"^[a-z][a-zA-Z0-9_\+\-\*/\\\^<>=~:.\?@#$&!;\[\]\{\}]*$").unwrap();
@@ -55,6 +56,7 @@ fn test_is_valid_atom_name() {
     assert!(is_valid_atom_name("'_X1'"));
 }
 
+#[allow(dead_code)]
 pub fn is_valid_variable_name(name: &str) -> bool {
     let re = Regex::new(r"^[A-Z_][a-zA-Z0-9_]*$").unwrap();
     re.is_match(name)

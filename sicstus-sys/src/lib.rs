@@ -48,7 +48,7 @@ unsafe impl Sync for Sicstus {}
 #[derive(Debug)]
 pub struct Sicstus {
     _sicstus: *mut SICSTUS_API_STRUCT,
-    dt: DISPATCH_TABLE_STRUCT_SICSTUS_H,
+    pub dt: DISPATCH_TABLE_STRUCT_SICSTUS_H,
 }
 
 impl Sicstus {
