@@ -1,4 +1,8 @@
+mod sys;
+
 use sicstus_rs::terms::{Atom, Var};
+use crate::sys::sys_tests;
+
 
 #[no_mangle]
 pub extern "C" fn rust_main() {
@@ -6,6 +10,7 @@ pub extern "C" fn rust_main() {
 }
 
 fn run_tests() {
+    sys_tests();
     test_create_variables();
     test_create_atoms();
 }

@@ -10,6 +10,7 @@
 //! If you need more fine grained control over the C API, you can still call it directly from the sicstus_sys crate.
 //! This module contains plenty of examples of how to do that.
 
+use alloc::ffi::CString;
 pub use sicstus_sys::{
     spio_t_bits, spio_t_error_code, spio_t_offset, spio_t_simple_device_close,
     spio_t_simple_device_flush_output, spio_t_simple_device_interrupt, spio_t_simple_device_ioctl,
@@ -146,16 +147,19 @@ pub fn sp_raise_exception(term: SP_term_ref) {
     unsafe { SP_raise_exception(term) }
 }
 
-/// Retrieve the Prolog ID corresponding to the given atom name.
+/// Retrieve the Prolog Atom ID corresponding to the given atom name.
 ///
 /// # Arguments
 /// * `atom_name` - A rust &str containing the atom name.
 ///
 /// # Returns
 /// The Prolog ID corresponding to the given atom name if it exists, and an error otherwise.
+/// # Description
+/// Prolog has a unique integer ID for each atom. This represenation is needed for some of the C API functions.
 /// See also: <https://sicstus.sics.se/sicstus/docs/latest4/pdf/sicstus.pdf#Creating%20and%20Manipulating%20SP_term_refs>
 pub fn sp_atom_from_string(atom_name: &str) -> Result<SP_atom, PrologError> {
-    let atom_id: SP_atom = unsafe { SP_atom_from_string(atom_name.as_ptr() as *const c_char) };
+    let atom_cstring: CString = CString::new(atom_name).unwrap();
+    let atom_id: SP_atom = unsafe { SP_atom_from_string(atom_cstring.as_ptr() as *const c_char) };
     if atom_id == 0 {
         Err(PrologError::AtomNotFound(atom_name.to_string()))
     } else {
