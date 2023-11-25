@@ -4,20 +4,25 @@
 
 extern crate alloc;
 
-pub mod spmacro;
 mod error;
 
 pub mod sys;
 
-pub mod terms;
+mod atom;
+mod term_ref;
 mod util;
-pub mod query;
-pub mod stash;
 
-#[cfg(feature="alloc")]
+pub use sys::{SP_term_ref, SP_atom, SP_integer};
+pub use term_ref::TermRef;
+
+pub use error::SicstusRsError;
+
+pub use atom::Atom;
+
+#[cfg(feature = "alloc")]
 use sicstus_sys::SICStusAllocator;
 
-#[cfg(feature="alloc")]
+#[cfg(feature = "alloc")]
 #[global_allocator]
 static ALLOCATOR: SICStusAllocator = SICStusAllocator;
 

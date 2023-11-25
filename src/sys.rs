@@ -75,7 +75,7 @@ use crate::error::SicstusRsError;
 use crate::util::string_from_ref;
 
 use core::cmp::Ordering;
-use core::ffi::{c_char, c_int};
+use core::ffi::{c_char, c_int, CStr};
 use core::ffi::{c_uchar, c_void};
 
 use super::*;
@@ -331,7 +331,7 @@ pub fn sp_define_c_predicate(
 }
 
 /// Returns a pointer to the
-pub fn sp_get_address(term: SP_term_ref) -> Result<*mut *mut c_void, PrologError> {
+pub fn sp_get_address(term: SP_term_ref) -> Result<*mut c_void, PrologError> {
     let p = core::ptr::null_mut();
     let ret_val = unsafe { SP_get_address(term, p) };
     if ret_val == 0 {
@@ -340,7 +340,9 @@ pub fn sp_get_address(term: SP_term_ref) -> Result<*mut *mut c_void, PrologError
             term
         )))
     } else {
-        Ok(p)
+        unsafe {
+            return Ok(*p);
+        }
     }
 }
 
@@ -422,6 +424,28 @@ pub fn sp_get_float(term: SP_term_ref) -> Result<f64, PrologError> {
     }
 }
 
+/// Save wrapper around the unsafe [SP_get_functor] function from Prolog.
+/// # Arguments
+/// * `term` - The term reference to convert.
+/// # Returns a Result of
+/// * `Ok((atom, arity))` - The atom and arity of the term reference wrapped in an [Ok] variant.
+/// * `Err(PrologError::TermConversionError)` - If the term reference could not be converted.
+pub fn sp_get_functor(term: SP_term_ref) -> Result<(SP_atom, usize), PrologError> {
+    let mut atom = SP_atom::default();
+    let atom_ptr = &mut atom as *mut SP_atom;
+    let mut arity: c_int = 0;
+    let arity_ptr = &mut arity as *mut c_int;
+    let ret_val = unsafe { SP_get_functor(term, atom_ptr, arity_ptr) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError(format!(
+            "Could not retrieve term {:?} as a functor.",
+            term
+        )))
+    } else {
+        Ok((atom, arity as usize))
+    }
+}
+
 pub fn sp_get_integer_bytes(
     term: SP_term_ref,
     buf: *mut c_void,
@@ -431,12 +455,38 @@ pub fn sp_get_integer_bytes(
     unsafe { SP_get_integer_bytes(term, buf, pbuf_size, native) }
 }
 
-pub fn sp_get_list(list: SP_term_ref, head: SP_term_ref, tail: SP_term_ref) -> c_int {
-    unsafe { SP_get_list(list, head, tail) }
+pub fn sp_get_list(list: SP_term_ref) -> Result<(SP_term_ref, SP_term_ref), PrologError> {
+    let head = sp_new_term_ref();
+    let tail = sp_new_term_ref();
+    let result: c_int = unsafe { SP_get_list(list, head, tail) };
+    if result == 0 {
+        Err(PrologError::TermConversionError(format!(
+            "Could not convert term {:?} to a list.",
+            list
+        )))
+    } else {
+        Ok((head, tail))
+    }
 }
-pub fn sp_get_list_codes(term: SP_term_ref, s: *mut *const c_char) -> c_int {
-    unsafe { SP_get_list_codes(term, s) }
+
+pub fn sp_get_list_codes(term: SP_term_ref) -> Result<String, PrologError> {
+    let s = core::ptr::null_mut();
+    let ret_val = unsafe { SP_get_list_codes(term, s) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError(format!(
+            "Could not convert term {:?} to a list of codes.",
+            term
+        )))
+    } else {
+        unsafe {
+            Ok(CStr::from_ptr(s as *const c_char)
+                .to_str()
+                .unwrap()
+                .to_string())
+        }
+    }
 }
+
 pub fn sp_get_list_n_bytes(
     term: SP_term_ref,
     tail: SP_term_ref,
@@ -942,6 +992,104 @@ pub fn sp_term_type(term: SP_term_ref) -> Result<c_int, PrologError> {
     }
 }
 
+pub fn sp_put_address(term: SP_term_ref, address: *mut c_void) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_put_address(term, address) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError(format!(
+            "Failed putting address {:?} into term {:?}",
+            address, term
+        )))
+    } else {
+        Ok(())
+    }
+}
+
+pub fn sp_put_list(term: SP_term_ref) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_put_list(term) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError(format!(
+            "Failed putting list into term {:?}",
+            term
+        )))
+    } else {
+        Ok(())
+    }
+}
+
+pub fn sp_put_list_codes(
+    term: SP_term_ref,
+    tail: SP_term_ref,
+    s: *const c_char,
+) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_put_list_codes(term, tail, s) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError(format!(
+            "Failed putting list codes for string {:?} with tail {:?} into term {:?}",
+            s, tail, term
+        )))
+    } else {
+        Ok(())
+    }
+}
+
+pub fn sp_put_list_n_bytes(
+    term: SP_term_ref,
+    tail: SP_term_ref,
+    n: usize,
+    s: *const u8,
+) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_put_list_n_bytes(term, tail, n, s) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError(format!(
+            "Failed putting list codes for string {:?} with tail {:?} into term {:?}",
+            s, tail, term
+        )))
+    } else {
+        Ok(())
+    }
+}
+
+pub fn sp_put_list_n_codes(
+    term: SP_term_ref,
+    tail: SP_term_ref,
+    n: usize,
+    s: *const c_char,
+) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_put_list_n_codes(term, tail, n, s) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError(format!(
+            "Failed putting list codes for string {:?} with tail {:?} into term {:?}",
+            s, tail, term
+        )))
+    } else {
+        Ok(())
+    }
+}
+
+pub fn sp_put_number_codes(term: SP_term_ref, s: *const c_char) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_put_number_codes(term, s) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError(format!(
+            "Failed putting number codes for string {:?} into term {:?}",
+            s, term
+        )))
+    } else {
+        Ok(())
+    }
+}
+
+pub fn sp_put_string(term: SP_term_ref, s: *const c_char) -> Result<(), PrologError> {
+    let ret_val = unsafe { SP_put_string(term, s) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError(format!(
+            "Failed putting string {:?} into term {:?}",
+            s, term
+        )))
+    } else {
+        Ok(())
+    }
+}
+
 pub fn sp_put_atom(term: SP_term_ref, atom: SP_atom) -> Result<(), PrologError> {
     let ret_val = unsafe { SP_put_atom(term, atom) };
     if ret_val == 0 {
@@ -1002,6 +1150,24 @@ pub fn sp_put_integer(term: SP_term_ref, i: i64) -> Result<(), PrologError> {
         Err(PrologError::TermConversionError(format!(
             "Failed putting integer {} into term {:?}",
             i, term
+        )))
+    } else {
+        Ok(())
+    }
+}
+
+pub fn sp_put_integer_bytes(
+    term: SP_term_ref,
+    buf: *mut c_void,
+    buf_size: usize,
+    native: bool,
+) -> Result<(), PrologError> {
+    let native = if native { 1 } else { 0 };
+    let ret_val = unsafe { SP_put_integer_bytes(term, buf, buf_size, native) };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError(format!(
+            "Failed putting integer bytes from buffer {:?} into term {:?}",
+            buf, term
         )))
     } else {
         Ok(())

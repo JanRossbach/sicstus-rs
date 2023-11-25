@@ -1,5 +1,5 @@
-use sicstus_rs::sys::*;
 use core::cmp::Ordering;
+use sicstus_rs::sys::*;
 
 pub fn sys_tests() {
     test_sp_atom_from_string();

@@ -1,10 +1,4 @@
 /target
 /Cargo.lock
 .cargo
-integration_tests/Cargo.lock
-integration_tests/target
-*.o
-*.c
-*.h
-*.so
-*.mapfile
+*.s.o

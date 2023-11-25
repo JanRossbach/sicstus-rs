@@ -1,7 +1,8 @@
 mod sys;
+mod list;
 
-use sicstus_rs::terms::{Atom, Var};
 use crate::sys::sys_tests;
+use crate::list::test_list;
 
 
 #[no_mangle]
@@ -13,13 +14,13 @@ fn run_tests() {
     sys_tests();
     test_create_variables();
     test_create_atoms();
+    test_list();
 }
 
 fn test_create_variables() {
-    let _ = Var::new();
 }
 
 fn test_create_atoms() {
-    let hello_atom = Atom::from("hello");
-    println!("hello atom: {:?}", hello_atom);
+    // let hello_atom = Atom::from("hello");
+    // println!("hello atom: {:?}", hello_atom);
 }

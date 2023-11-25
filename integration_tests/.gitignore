@@ -1,0 +1,8 @@
+Cargo.lock
+/target
+*.o
+*.c
+*.a
+*.h
+*.so
+*.mapfile
