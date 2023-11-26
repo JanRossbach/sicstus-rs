@@ -26,11 +26,10 @@ use sicstus_sys::SICStusAllocator;
 #[global_allocator]
 static ALLOCATOR: SICStusAllocator = SICStusAllocator;
 
-// #[cfg(feature="print")]
-// custom_print::define_macros!({ print, println }, fmt, |value: &str| {
-//     let c_str = alloc::ffi::CString::new(value).unwrap();
-//     unsafe {
-//         panic!("Print not implemented");
-//         sicstus_sys::SP_printf(c_str.as_ptr());
-//     }
-// });
+custom_print::define_macros!({ print, println }, fmt, |value: &str| {
+    let c_str = alloc::ffi::CString::new(value).unwrap();
+    unsafe {
+        panic!("Print not implemented");
+        sicstus_sys::SP_printf(c_str.as_ptr());
+    }
+});

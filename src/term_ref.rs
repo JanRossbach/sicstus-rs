@@ -1,14 +1,14 @@
 use core::{cmp::Ordering, ffi::c_void};
 
-use alloc::{string::String, vec::Vec};
+use alloc::string::String;
 use sicstus_sys::{SP_atom, SP_term_ref};
 
 use crate::{
-    sys::{self, PrologError},
+    sys::{self, sp_cons_list, sp_get_list, sp_new_term_ref, PrologError},
     Atom,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct TermRef {
     term_ref: SP_term_ref,
 }
@@ -18,6 +18,24 @@ impl TermRef {
         TermRef {
             term_ref: sys::sp_new_term_ref(),
         }
+    }
+
+    pub fn new_integer(integer: i64) -> Self {
+        let mut term_ref = TermRef::new();
+        term_ref.put_integer(integer).unwrap();
+        term_ref
+    }
+
+    pub fn new_float(float: f64) -> Self {
+        let mut term_ref = TermRef::new();
+        term_ref.put_float(float).unwrap();
+        term_ref
+    }
+
+    pub fn new_list() -> Self {
+        let mut term_ref = TermRef::new();
+        term_ref.put_list().unwrap();
+        term_ref
     }
 
     pub fn term_ref(&self) -> SP_term_ref {
@@ -115,6 +133,11 @@ impl TermRef {
     pub fn put_variable(&mut self) -> Result<(), PrologError> {
         sys::sp_put_variable(self.term_ref)
     }
+
+    pub fn cons(&mut self, head: TermRef) -> Result<(), PrologError> {
+        assert!(self.is_list());
+        sys::sp_cons_list(self.term_ref, head.term_ref, self.term_ref)
+    }
 }
 
 // Type Checking the SP_term_ref
@@ -180,10 +203,9 @@ impl TermRef {
         sys::sp_get_integer(self.term_ref)
     }
 
-    /// Returns a Tuple of the form (Head, Tail) where both Head and Tail are TermRef
-    pub fn get_list(&self) -> Result<(TermRef, TermRef), PrologError> {
+    pub fn get_list(&self) -> Option<(TermRef, TermRef)> {
         let (head, tail) = sys::sp_get_list(self.term_ref)?;
-        Ok((head.into(), tail.into()))
+        Some((head.into(), tail.into()))
     }
 
     pub fn get_list_codes(&self) -> Result<String, PrologError> {
@@ -207,35 +229,52 @@ impl Into<SP_term_ref> for TermRef {
     }
 }
 
-impl From<Vec<i32>> for TermRef {
-    fn from(vec: Vec<i32>) -> Self {
-        let mut term_ref = TermRef::new();
-        let mut tail = TermRef::new();
-        for i in vec {
-            let mut head = TermRef::new();
-            head.put_integer(i as i64).unwrap();
-            tail.put_list().unwrap();
-            tail.put_term(&head).unwrap();
+impl IntoIterator for TermRef {
+    type Item = TermRef;
+    type IntoIter = TermRefIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        TermRefIterator::new(self)
+    }
+}
+
+pub struct TermRefIterator {
+    term_ref: SP_term_ref,
+}
+
+impl TermRefIterator {
+    pub fn new(term_ref: TermRef) -> Self {
+        assert!(term_ref.is_list());
+        TermRefIterator {
+            term_ref: term_ref.term_ref(),
         }
-        term_ref.put_term(&tail).unwrap();
+    }
+}
+
+impl Iterator for TermRefIterator {
+    type Item = TermRef;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let (head, tail) = sp_get_list(self.term_ref)?;
+        self.term_ref = tail;
+        Some(head.into())
+    }
+}
+
+impl Clone for TermRef {
+    fn clone(&self) -> Self {
+        let mut term_ref = TermRef::new();
+        term_ref.put_term(self).unwrap();
         term_ref
     }
 }
 
-impl Into<Vec<i64>> for TermRef {
-    fn into(self) -> Vec<i64> {
-        let mut result = Vec::new();
-        let tail = TermRef::new();
-        tail.unify(&self).unwrap();
-        while tail.is_list() {
-            let head = TermRef::new();
-            head.get_arg(1)
-                .unwrap()
-                .unify(&tail.get_arg(1).unwrap())
-                .unwrap();
-            result.push(head.get_integer().unwrap());
-            tail.get_arg(2).unwrap().unify(&tail).unwrap();
+impl FromIterator<TermRef> for TermRef {
+    fn from_iter<I: IntoIterator<Item = TermRef>>(iter: I) -> Self {
+        let l = sp_new_term_ref();
+        for item in iter {
+            sp_cons_list(l, item.term_ref, l).unwrap();
         }
-        result
+        l.into()
     }
 }

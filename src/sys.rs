@@ -257,8 +257,7 @@ pub fn sp_cons_functor_array() -> c_int {
 /// # Returns
 /// Ok(term_ref) of the assigned new term if the conversion was successful, and Err otherwise.
 /// See also: <https://sicstus.sics.se/sicstus/docs/latest4/pdf/sicstus.pdf#Creating%20Prolog%20Terms>
-pub fn sp_cons_list(head: SP_term_ref, tail: SP_term_ref) -> Result<SP_term_ref, PrologError> {
-    let term = sp_new_term_ref();
+pub fn sp_cons_list(term: SP_term_ref, head: SP_term_ref, tail: SP_term_ref) -> Result<(), PrologError> {
     let ret_val = unsafe { SP_cons_list(term, head, tail) };
     if ret_val == 0 {
         Err(PrologError::TermConversionError(format!(
@@ -266,7 +265,7 @@ pub fn sp_cons_list(head: SP_term_ref, tail: SP_term_ref) -> Result<SP_term_ref,
             head, tail
         )))
     } else {
-        Ok(term)
+        Ok(())
     }
 }
 
@@ -455,17 +454,14 @@ pub fn sp_get_integer_bytes(
     unsafe { SP_get_integer_bytes(term, buf, pbuf_size, native) }
 }
 
-pub fn sp_get_list(list: SP_term_ref) -> Result<(SP_term_ref, SP_term_ref), PrologError> {
+pub fn sp_get_list(list: SP_term_ref) -> Option<(SP_term_ref, SP_term_ref)> {
     let head = sp_new_term_ref();
     let tail = sp_new_term_ref();
     let result: c_int = unsafe { SP_get_list(list, head, tail) };
     if result == 0 {
-        Err(PrologError::TermConversionError(format!(
-            "Could not convert term {:?} to a list.",
-            list
-        )))
+        None
     } else {
-        Ok((head, tail))
+        Some((head, tail))
     }
 }
 

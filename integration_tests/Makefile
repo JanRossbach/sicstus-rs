@@ -25,5 +25,4 @@ build:
 	@cargo build
 
 clean:
-	@cargo clean
-	@rm -f *.so *.o *_glue*
+	@rm -f *.so *.o *_glue* *.a
