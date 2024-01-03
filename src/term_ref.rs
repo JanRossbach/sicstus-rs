@@ -20,6 +20,11 @@ impl TermRef {
         }
     }
 
+    /// Create a prolob term from a string containing prolog code.
+    pub fn from_prolog(_prolog_code: &str) -> Result<Self, PrologError> {
+        unimplemented!("TermRef::from_prolog");
+    }
+
     pub fn new_integer(integer: i64) -> Self {
         let mut term_ref = TermRef::new();
         term_ref.put_integer(integer).unwrap();

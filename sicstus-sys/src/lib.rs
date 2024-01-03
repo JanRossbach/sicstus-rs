@@ -444,14 +444,14 @@ macro_rules! SP_open_query {
     }
 }
 
-#[macro_export]
-macro_rules! SP_printf {
-    ($fmt:expr,$($arg:expr),*) => {
-        unsafe {
-            $crate::sicstus().dt.pSP_printf($fmt,$($arg),*)
-        }
-    }
-}
+// #[macro_export]
+// macro_rules! SP_printf {
+//     ($fmt:expr,$($arg:expr),*) => {
+//         unsafe {
+//             $crate::sicstus().dt.pSP_printf($fmt,$($arg),*)
+//         }
+//     }
+// }
 
 #[macro_export]
 macro_rules! SP_query {
@@ -487,16 +487,21 @@ pub fn SP_initialize(argc: c_int, argv: *mut *mut c_char, options: *const SP_opt
     }
 }
 
+pub fn SP_printf(s: &str) -> spio_t_error_code {
+    unsafe {
+        sicstus().dt.pSP_printf.unwrap()(
+            s as *const str as *const c_char,
+        )
+    }
+}
+
 // It is recommended to use the sicstus memory management functions instead of the Rust ones in order to
 // avoid memory fragmentation. In order to use the Rust allocator you can disable the alloc feature.
 
-#[cfg(feature = "alloc")]
 use core::alloc::{GlobalAlloc, Layout};
 
-#[cfg(feature = "alloc")]
 pub struct SICStusAllocator;
 
-#[cfg(feature = "alloc")]
 unsafe impl GlobalAlloc for SICStusAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         SP_malloc(layout.size()) as *mut u8

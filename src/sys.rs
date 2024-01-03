@@ -147,6 +147,33 @@ pub fn sp_raise_exception(term: SP_term_ref) {
     unsafe { SP_raise_exception(term) }
 }
 
+/// Reads the given string as prolog Code and assigns it
+/// Variables are
+pub fn sp_read_from_string(
+    string: &str,
+    values: Vec<SP_term_ref>,
+) -> Result<SP_term_ref, PrologError> {
+    let mut values = values;
+    values.push(0); // Null terminate the array for safety. If it is already terminated it should't hurt.
+    let term = sp_new_term_ref();
+    let ret_val = unsafe {
+        SP_read_from_string(
+            term,
+            string.as_ptr() as *const c_char,
+            values.as_ptr() as *mut SP_term_ref,
+        )
+    };
+    if ret_val == 0 {
+        Err(PrologError::TermConversionError(format!(
+                "Problem reading the prolog code {} with values {:?} into a term with SP_read_from_string.",
+                string,
+                values
+            )))
+    } else {
+        Ok(term)
+    }
+}
+
 /// Retrieve the Prolog Atom ID corresponding to the given atom name.
 ///
 /// # Arguments
@@ -257,7 +284,11 @@ pub fn sp_cons_functor_array() -> c_int {
 /// # Returns
 /// Ok(term_ref) of the assigned new term if the conversion was successful, and Err otherwise.
 /// See also: <https://sicstus.sics.se/sicstus/docs/latest4/pdf/sicstus.pdf#Creating%20Prolog%20Terms>
-pub fn sp_cons_list(term: SP_term_ref, head: SP_term_ref, tail: SP_term_ref) -> Result<(), PrologError> {
+pub fn sp_cons_list(
+    term: SP_term_ref,
+    head: SP_term_ref,
+    tail: SP_term_ref,
+) -> Result<(), PrologError> {
     let ret_val = unsafe { SP_cons_list(term, head, tail) };
     if ret_val == 0 {
         Err(PrologError::TermConversionError(format!(

@@ -1,5 +1,4 @@
 use crate::sys::{self, PrologError};
-use crate::util::is_valid_atom_name;
 use crate::SP_atom;
 use alloc::string::String;
 
@@ -16,7 +15,6 @@ pub struct Atom {
 
 impl Atom {
     pub fn new(name: String) -> Self {
-        assert!(is_valid_atom_name(&name));
         let atom_id = sys::sp_atom_from_string(&name).unwrap();
         sys::sp_register_atom(atom_id).unwrap();
         let mut term_ref = TermRef::new();
@@ -63,6 +61,10 @@ impl Atom {
     pub fn unify(&mut self, other: &TermRef) -> Result<(), PrologError> {
         self.term_ref.unify(other)
     }
+
+    pub fn from_string(name: String) -> Result<Self, PrologError> {
+        Ok(Atom::new(name))
+    }
 }
 
 impl Drop for Atom {
@@ -102,6 +104,13 @@ impl From<SP_atom> for Atom {
             name,
         }
     }
+}
+
+impl From<String> for Atom {
+    fn from(name: String) -> Self {
+        Atom::new(name)
+    }
+
 }
 
 impl From<&str> for Atom {

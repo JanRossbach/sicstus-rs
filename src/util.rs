@@ -1,7 +1,6 @@
 use core::ffi::c_char;
 
 use alloc::string::String;
-use regex::Regex;
 
 /// Create a new [String] from a *const pointer to a C string.
 /// This does not take ownership of the pointer. The caller is responsible for freeing the memory.
@@ -37,38 +36,39 @@ fn test_string_copy() {
     assert_eq!(copied_string, "Hello, World!".to_string());
 }
 
-#[allow(dead_code)]
-pub fn is_valid_atom_name(name: &str) -> bool {
-    // TODO Check for correct bracket pairs
-    let re = Regex::new(r"^[a-z][a-zA-Z0-9_\+\-\*/\\\^<>=~:.\?@#$&!;\[\]\{\}]*$").unwrap();
-    let re2 = Regex::new(r"^'.*'$").unwrap();
-    re.is_match(name) || re2.is_match(name)
-}
+// #[allow(dead_code)]
+// pub fn is_valid_atom_name(name: &str) -> bool {
+//     // TODO Check for correct bracket pairs
+//     let re = Regex::new(r"^[a-z][a-zA-Z0-9_\+\-\*/\\\^<>=~:.\?@#$&!;\[\]\{\}]*$").unwrap();
+//     let re2 = Regex::new(r"^'.*'$").unwrap();
+//     re.is_match(name) || re2.is_match(name)
+// }
 
-#[cfg(test)]
-#[test]
-fn test_is_valid_atom_name() {
-    assert!(!is_valid_atom_name(""));
-    assert!(is_valid_atom_name("a"));
-    assert!(is_valid_atom_name("a+-*/\\^<>=~:.?@#$&!;[]{}"));
-    assert!(!is_valid_atom_name("X1"));
-    assert!(!is_valid_atom_name("_X1"));
-    assert!(is_valid_atom_name("'_X1'"));
-}
+// #[cfg(test)]
+// #[test]
+// fn test_is_valid_atom_name() {
+//     assert!(!is_valid_atom_name(""));
+//     assert!(is_valid_atom_name("a"));
+//     assert!(is_valid_atom_name("a+-*/\\^<>=~:.?@#$&!;[]{}"));
+//     assert!(!is_valid_atom_name("X1"));
+//     assert!(!is_valid_atom_name("_X1"));
+//     assert!(is_valid_atom_name("'_X1'"));
+// }
 
-#[allow(dead_code)]
-pub fn is_valid_variable_name(name: &str) -> bool {
-    let re = Regex::new(r"^[A-Z_][a-zA-Z0-9_]*$").unwrap();
-    re.is_match(name)
-}
+// const VARIABLE_REGEX: &str = r"^[A-Z_][a-zA-Z0-9_]*$";
 
-#[cfg(test)]
-#[test]
-fn test_is_valid_variable_name() {
-    assert!(!is_valid_variable_name(""));
-    assert!(is_valid_variable_name("X"));
-    assert!(!is_valid_variable_name("a+-*/\\^<>=~:.?@#$&!;[]{}"));
-    assert!(is_valid_variable_name("X1"));
-    assert!(is_valid_variable_name("_X1"));
-    assert!(!is_valid_variable_name("'_X1'"));
-}
+// pub fn is_valid_variable_name(name: &str) -> bool {
+//     let re = Regex::new(VARIABLE_REGEX).unwrap();
+//     re.is_match(name)
+// }
+
+// #[cfg(test)]
+// #[test]
+// fn test_is_valid_variable_name() {
+//     assert!(!is_valid_variable_name(""));
+//     assert!(is_valid_variable_name("X"));
+//     assert!(!is_valid_variable_name("a+-*/\\^<>=~:.?@#$&!;[]{}"));
+//     assert!(is_valid_variable_name("X1"));
+//     assert!(is_valid_variable_name("_X1"));
+//     assert!(!is_valid_variable_name("'_X1'"));
+// }

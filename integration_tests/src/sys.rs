@@ -5,12 +5,13 @@ pub fn sys_tests() {
     test_sp_atom_from_string();
     test_sp_atom_length();
     test_sp_compare();
+    test_print();
 }
 
 fn test_sp_atom_from_string() {
     let atom = sp_atom_from_string("hello").unwrap();
     let atom2 = sp_atom_from_string("_ÖALKSDFJÖLK-").unwrap(); // Wierd atom name gets accepted by prolog. I think it treats it like it is in '' quotes.
-    println!("test_sp_atom_from_string: {:?}, Ok", atom2);
+    sicstus_rs::println!("test_sp_atom_from_string: {:?}, Ok", atom2);
 }
 
 fn test_sp_atom_length() {
@@ -19,7 +20,7 @@ fn test_sp_atom_length() {
     let s = sp_string_from_atom(atom);
     assert_eq!(s, "hello");
     assert_eq!(len, 5);
-    println!("test_sp_atom_length, Ok");
+    sicstus_rs::println!("test_sp_atom_length, Ok");
 }
 
 // TODO
@@ -34,9 +35,12 @@ fn test_sp_compare() {
     let t2 = sp_new_term_ref();
     sp_put_atom(t2, a2).unwrap();
     assert_eq!(Ordering::Less, sp_compare(t1,t2));
-    println!("test_sp_compare, Ok");
+    sicstus_rs::println!("test_sp_compare, Ok");
 }
 
-fn test_sp_cons_functor() {
-
+fn test_print() {
+    sicstus_rs::print!("Hello, world from sicstus_rs print macro!\n");
+    //println!("???");
+    sicstus_rs::println!("Hello, world from sicstus_rs println macro!");
+    println!("test_print, Ok");
 }
