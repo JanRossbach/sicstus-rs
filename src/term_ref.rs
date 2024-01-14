@@ -20,7 +20,7 @@ impl TermRef {
         }
     }
 
-    /// Create a prolob term from a string containing prolog code.
+    /// Create a prolog term from a string containing prolog code.
     pub fn from_prolog(_prolog_code: &str) -> Result<Self, PrologError> {
         unimplemented!("TermRef::from_prolog");
     }

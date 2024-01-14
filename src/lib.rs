@@ -5,7 +5,7 @@
 extern crate alloc;
 extern crate spin;
 
-mod error;
+pub mod error;
 
 pub mod sys;
 
