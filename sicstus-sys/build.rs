@@ -1,6 +1,5 @@
 use std::env;
 use std::path::PathBuf;
-use std::process::Command;
 
 fn find_sicstus_root_dir() -> Option<PathBuf> {
     if let Ok(sp_path) = env::var("SP_PATH") {
@@ -11,23 +10,19 @@ fn find_sicstus_root_dir() -> Option<PathBuf> {
         return Some(PathBuf::from(sp_path));
     }
 
-    // Try the default install location on UNIX
+    // Try the default install location on Linux
     let status = std::process::Command::new("ls")
         .arg("/usr/local/sicstus4.8.0")
-        .status()
-        .expect("failed to execute process");
-    if status.success() {
+        .status();
+    if status.is_ok() && status.unwrap().success() {
         return Some(PathBuf::from("/usr/local/sicstus4.8.0"));
     }
 
     // Check if sicstus is on the path
     let cmd = "sicstus";
-    let status = std::process::Command::new(cmd)
-        .arg("--version")
-        .status()
-        .expect("failed to execute process");
+    let status = std::process::Command::new(cmd).arg("--version").status();
 
-    if status.success() {
+    if status.is_ok() && status.unwrap().success() {
         let output = std::process::Command::new("which")
             .arg(cmd)
             .output()
@@ -50,7 +45,8 @@ fn generate_bindings(sicstus_root_dir: PathBuf, out_path: PathBuf) {
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
-    let bindings = bindgen::Builder::default().use_core()
+    let bindings = bindgen::Builder::default()
+        .use_core()
         // The input header we would like to generate
         // bindings for.
         .header(
@@ -66,9 +62,9 @@ fn generate_bindings(sicstus_root_dir: PathBuf, out_path: PathBuf) {
             "-I{}",
             sicstus_root_dir.join("include").to_str().unwrap()
         ))
-        .allowlist_type("SP_.*")
-        .allowlist_var("SP_.*")
-        .allowlist_function("SP_.*")
+        // .allowlist_type("SP_.*")
+        // .allowlist_var("SP_.*")
+        // .allowlist_function("SP_.*")
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         // .parse_callbacks(Box::new(bindgen::CargoCallbacks))
@@ -83,12 +79,12 @@ fn generate_bindings(sicstus_root_dir: PathBuf, out_path: PathBuf) {
 }
 
 /// Create the libinit.a static library that is linked to the final binary to provie the initialize_default_prolog_runtime function
-fn _create_init_lib(sicstus_root_dir: PathBuf, out_path: PathBuf ) {
+fn _create_init_lib(sicstus_root_dir: PathBuf, out_path: PathBuf) {
     // Compile init.c and init.pl to a foreign static resource
-    Command::new(sicstus_root_dir.join("bin").join("spld"))
+    std::process::Command::new(sicstus_root_dir.join("bin").join("spld"))
         .arg("-o")
         .arg(out_path.join("libinit.a"))
-    //.arg("init/init.pl")
+        //.arg("init/init.pl")
         .arg("init/init.c")
         .arg("--static")
         .arg("--shared")

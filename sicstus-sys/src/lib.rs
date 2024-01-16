@@ -488,11 +488,7 @@ pub fn SP_initialize(argc: c_int, argv: *mut *mut c_char, options: *const SP_opt
 }
 
 pub fn SP_printf(s: &str) -> spio_t_error_code {
-    unsafe {
-        sicstus().dt.pSP_printf.unwrap()(
-            s as *const str as *const c_char,
-        )
-    }
+    unsafe { sicstus().dt.pSP_printf.unwrap()(s as *const str as *const c_char) }
 }
 
 // It is recommended to use the sicstus memory management functions instead of the Rust ones in order to

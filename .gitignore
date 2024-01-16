@@ -2,3 +2,5 @@
 /Cargo.lock
 .cargo
 *.s.o
+*.lib
+*.a

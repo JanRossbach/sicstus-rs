@@ -10,6 +10,7 @@ pub fn sys_tests() {
 
 fn test_sp_atom_from_string() {
     let atom = sp_atom_from_string("hello").unwrap();
+    sicstus_rs::println!("test_sp_atom_from_string: {:?}, Ok", atom);
     let atom2 = sp_atom_from_string("_ÖALKSDFJÖLK-").unwrap(); // Wierd atom name gets accepted by prolog. I think it treats it like it is in '' quotes.
     sicstus_rs::println!("test_sp_atom_from_string: {:?}, Ok", atom2);
 }
@@ -21,10 +22,6 @@ fn test_sp_atom_length() {
     assert_eq!(s, "hello");
     assert_eq!(len, 5);
     sicstus_rs::println!("test_sp_atom_length, Ok");
-}
-
-// TODO
-fn test_sp_query_funs() {
 }
 
 fn test_sp_compare() {
