@@ -21,6 +21,7 @@ use core::ffi::c_uchar;
 use core::ffi::c_void;
 
 use bindings::SP_MainFun;
+use bindings::SP_get_dispatch_40800;
 use bindings::DISPATCH_TABLE_STRUCT_SICSTUS_H;
 use bindings::SP_GLUE_INITIALIZE_OPTION_RESTORE;
 pub use bindings::{
@@ -63,7 +64,7 @@ impl Sicstus {
 impl Sicstus {
     fn new() -> Self {
         unsafe {
-            let sicstus: *mut SICSTUS_API_STRUCT = get_sp_dispatch_wrapper();
+            let sicstus: *mut SICSTUS_API_STRUCT = SP_get_dispatch_40800(core::ptr::null_mut());
             let dt = (*sicstus).dispatch_API_SICSTUS_H;
             let dt = *dt;
             let initialized = dt.psp_prolog_initialized.unwrap()();
@@ -498,6 +499,7 @@ pub fn SP_printf(s: &str) -> spio_t_error_code {
 // avoid memory fragmentation. In order to use the Rust allocator you can disable the alloc feature.
 
 use core::alloc::{GlobalAlloc, Layout};
+
 
 pub struct SICStusAllocator;
 
