@@ -35,5 +35,8 @@ $(LIB): build
 build:
 	@cargo build
 
-clean:
-	@rm -f *.so *.o *_glue* $(LIB)
+clean: cargo-clean
+	@rm -f *.so *.o *_glue*
+
+cargo-clean:
+	@cargo clean
