@@ -1,4 +1,5 @@
 #![no_std]
+#![allow(unused_imports)]
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -20,6 +21,8 @@ use core::ffi::c_int;
 use core::ffi::c_uchar;
 use core::ffi::c_void;
 
+use once_cell::sync::Lazy;
+
 use bindings::SP_MainFun;
 use bindings::SP_get_dispatch_40800;
 use bindings::DISPATCH_TABLE_STRUCT_SICSTUS_H;
@@ -34,20 +37,11 @@ pub use bindings::{
     SP_TYPE_COMPOUND, SP_TYPE_ERROR, SP_TYPE_FLOAT, SP_TYPE_INTEGER, SP_TYPE_VARIABLE,
 };
 
-#[macro_use]
-extern crate lazy_static;
-
-lazy_static! {
-    static ref SICSTUS: Sicstus = Sicstus::new();
-}
-
-extern "C" {
-    fn get_sp_dispatch_wrapper() -> *mut SICSTUS_API_STRUCT;
-}
-
 // We only ever read the pointers in the dispatch table, so it is safe to share it between threads.
 unsafe impl Send for Sicstus {}
 unsafe impl Sync for Sicstus {}
+
+static SICSTUS: Lazy<Sicstus> = Lazy::new(|| Sicstus::new());
 
 #[derive(Debug)]
 pub struct Sicstus {
@@ -499,7 +493,6 @@ pub fn SP_printf(s: &str) -> spio_t_error_code {
 // avoid memory fragmentation. In order to use the Rust allocator you can disable the alloc feature.
 
 use core::alloc::{GlobalAlloc, Layout};
-
 
 pub struct SICStusAllocator;
 

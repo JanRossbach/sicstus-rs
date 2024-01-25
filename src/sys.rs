@@ -24,7 +24,6 @@ pub use sicstus_sys::{
 pub use sicstus_sys::SP_printf;
 
 mod error {
-    use core::error::Error;
 
     use alloc::string::String;
 
@@ -61,7 +60,6 @@ mod error {
             write!(fmt, "{self:?}")
         }
     }
-    impl Error for PrologError {}
 }
 
 use alloc::format;

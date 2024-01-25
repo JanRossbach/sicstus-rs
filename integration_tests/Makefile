@@ -16,7 +16,7 @@ run: $(EXT_NAME).so
 	@sicstus -l $(EXT_NAME) --goal "rust_main, halt."
 
 $(EXT_NAME).so: $(EXT_NAME)_glue.o
-	gcc -shared $(LDFLAGS) $(EXT_NAME).o $(EXT_NAME)_glue.o $(LIB) -o $(EXT_NAME).so $(DYLIBS)
+	@gcc -shared $(LDFLAGS) $(EXT_NAME).o $(EXT_NAME)_glue.o $(LIB) -o $(EXT_NAME).so $(DYLIBS)
 
 $(EXT_NAME)_glue.o: $(EXT_NAME)_glue.c $(EXT_NAME)_glue.h $(EXT_NAME).o
 	@gcc $(INCLUDEFLAGS) $(SICSTUSFLAGS) -c integration_tests_glue.c -o integration_tests_glue.o
