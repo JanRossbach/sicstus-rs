@@ -9,3 +9,6 @@ edition = "2021"
 [dependencies]
 sicstus-sys = { path = "./sicstus-sys", version = "0.1.0" }
 spin = "0.9.8"
+
+[features]
+allocator = []

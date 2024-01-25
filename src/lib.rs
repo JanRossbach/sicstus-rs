@@ -8,6 +8,9 @@ pub mod error;
 
 pub mod sys;
 
+#[cfg(feature = "allocator")]
+mod allocator;
+
 mod atom;
 #[macro_use]
 mod query;
@@ -25,10 +28,6 @@ pub use atom::Atom;
 pub use error::SicstusRsError;
 pub use query::Predicate;
 
-use sicstus_sys::SICStusAllocator;
-
-#[global_allocator]
-static ALLOCATOR: SICStusAllocator = SICStusAllocator;
 
 pub static WRITER: Mutex<Writer> = Mutex::new(Writer {});
 

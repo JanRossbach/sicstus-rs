@@ -488,24 +488,3 @@ pub fn SP_initialize(argc: c_int, argv: *mut *mut c_char, options: *const SP_opt
 pub fn SP_printf(s: &str) -> spio_t_error_code {
     unsafe { sicstus().dt.pSP_printf.unwrap()(s as *const str as *const c_char) }
 }
-
-// It is recommended to use the sicstus memory management functions instead of the Rust ones in order to
-// avoid memory fragmentation. In order to use the Rust allocator you can disable the alloc feature.
-
-use core::alloc::{GlobalAlloc, Layout};
-
-pub struct SICStusAllocator;
-
-unsafe impl GlobalAlloc for SICStusAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        SP_malloc(layout.size()) as *mut u8
-    }
-
-    unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
-        SP_free(ptr as *mut c_void)
-    }
-
-    unsafe fn realloc(&self, ptr: *mut u8, _layout: Layout, new_size: usize) -> *mut u8 {
-        SP_realloc(ptr as *mut c_void, new_size) as *mut u8
-    }
-}

@@ -9,7 +9,7 @@ edition = "2021"
 crate-type = ["staticlib"]
 
 [dependencies]
-sicstus-rs = { path = "../", version = "0.1.0" }
+sicstus-rs = { path = "../", version = "0.1.0" } # , allocator"]}
 
 [build-dependencies]
 cbindgen = "0.24.0"

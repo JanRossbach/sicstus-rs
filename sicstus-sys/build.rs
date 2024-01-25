@@ -2,20 +2,8 @@ use std::env;
 use std::path::PathBuf;
 
 fn find_sicstus_root_dir() -> Option<PathBuf> {
-    if let Ok(sp_path) = env::var("SP_PATH") {
-        return Some(PathBuf::from(sp_path));
-    }
-
     if let Ok(sp_path) = env::var("SICSTUSDIR") {
         return Some(PathBuf::from(sp_path));
-    }
-
-    // Try the default install location on Linux
-    let status = std::process::Command::new("ls")
-        .arg("/usr/local/sicstus4.8.0")
-        .status();
-    if status.is_ok() && status.unwrap().success() {
-        return Some(PathBuf::from("/usr/local/sicstus4.8.0"));
     }
 
     // Check if sicstus is on the path
@@ -76,23 +64,6 @@ fn generate_bindings(sicstus_root_dir: PathBuf, out_path: PathBuf) {
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
-}
-
-/// Create the libinit.a static library that is linked to the final binary to provie the initialize_default_prolog_runtime function
-fn _create_init_lib(sicstus_root_dir: PathBuf, out_path: PathBuf) {
-    // Compile init.c and init.pl to a foreign static resource
-    std::process::Command::new(sicstus_root_dir.join("bin").join("spld"))
-        .arg("-o")
-        .arg(out_path.join("libinit.a"))
-        //.arg("init/init.pl")
-        .arg("init/init.c")
-        .arg("--static")
-        .arg("--shared")
-        .arg("--main=none")
-        .status()
-        .expect("failed to execute process");
-    // cmd.file("src/init.c");
-    // cmd.compile("init");
 }
 
 fn main() {
