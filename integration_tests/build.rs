@@ -3,6 +3,10 @@ extern crate cbindgen;
 use std::env;
 use std::path::PathBuf;
 
+
+use std::process::Command;
+use regex;
+
 fn find_sicstus_root_dir() -> Option<PathBuf> {
     if let Ok(sp_path) = env::var("SICSTUSDIR") {
         return Some(PathBuf::from(sp_path));
@@ -44,10 +48,26 @@ fn gen_c_bindings(crate_dir: String, crate_name: String) {
         .write_to_file(filename);
 }
 
+fn get_sicstus_version(sicstus_root_dir: PathBuf) -> String {
+    let output: String = Command::new(sicstus_root_dir.join("bin").join("sicstus"))
+        .arg("--version")
+        .output()
+        .expect("failed to get sicstus version")
+        .stdout
+        .iter()
+        .map(|&c| c as char)
+        .collect();
+    // find the version number in the output
+    let re = regex::Regex::new(r"(\d+\.\d+\.\d+)").unwrap();
+    let caps = re.captures(&output).unwrap();
+    caps.get(1).unwrap().as_str().to_string()
+}
+
 fn main() {
     let sicstus_root_dir = find_sicstus_root_dir().expect("failed to find sicstus root dir. Set SP_PATH or SICSTUSDIR environment variable in CARGO_MANIFEST_DIR/.cargo/config.toml to configure it manually.");
+    let sicstus_version = get_sicstus_version(sicstus_root_dir.clone());
     println!("cargo:rustc-link-search=native={}lib", sicstus_root_dir.to_str().unwrap());
-    println!("cargo:rustc-link-lib=dylib=sprt4-8-0");
+    println!("cargo:rustc-link-lib=dylib=sprt{}", sicstus_version);
 
     let crate_dir: String = env::var("CARGO_MANIFEST_DIR").unwrap();
     let crate_name: String = env::var("CARGO_PKG_NAME").unwrap();

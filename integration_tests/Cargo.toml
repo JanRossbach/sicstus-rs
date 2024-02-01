@@ -13,3 +13,4 @@ sicstus-rs = { path = "../", version = "0.1.0" } # , allocator"]}
 
 [build-dependencies]
 cbindgen = "0.24.0"
+regex = "1.10.3"

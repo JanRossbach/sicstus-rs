@@ -24,7 +24,15 @@ use core::ffi::c_void;
 use once_cell::sync::Lazy;
 
 use bindings::SP_MainFun;
+
+// Sicstus has a different get_dispatch function for each version. We need conditional compilation to select the right one.
+// The cfg(sicstus_version) attribute is set in build.rs.
+#[cfg(sicstus_version = "4.8.0")]
 use bindings::SP_get_dispatch_40800;
+
+#[cfg(sicstus_version = "4.9.0")]
+use bindings::SP_get_dispatch_40900;
+
 use bindings::DISPATCH_TABLE_STRUCT_SICSTUS_H;
 use bindings::SP_GLUE_INITIALIZE_OPTION_RESTORE;
 pub use bindings::{
@@ -58,7 +66,11 @@ impl Sicstus {
 impl Sicstus {
     fn new() -> Self {
         unsafe {
+            #[cfg(sicstus_version = "4.8.0")]
             let sicstus: *mut SICSTUS_API_STRUCT = SP_get_dispatch_40800(core::ptr::null_mut());
+            #[cfg(sicstus_version = "4.9.0")]
+            let sicstus: *mut SICSTUS_API_STRUCT = SP_get_dispatch_40900(core::ptr::null_mut());
+
             let dt = (*sicstus).dispatch_API_SICSTUS_H;
             let dt = *dt;
             let initialized = dt.psp_prolog_initialized.unwrap()();
@@ -84,7 +96,7 @@ macro_rules! define_dispatch_fns {
     ) => {
         $(
             pub unsafe fn $name($($arg_name: $arg_ty),*) $(->$ret_ty)? {
-                SICSTUS.dt.$field_name.expect("Crashed getting function from dipatch table")($($arg_name),*)
+                SICSTUS.dt.$field_name.expect("Crashed getting function from dipatch table")($($arg_name),*).try_into().unwrap()
             }
         )+
     }

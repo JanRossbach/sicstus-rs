@@ -1,19 +1,17 @@
 EXT_NAME=integration_tests
 LIB = lib$(EXT_NAME).a
 
-SICSTUSDIR=/home/jan/.local/share/sicstus4.8.0
-
 INCLUDEFLAGS = -I"$(SICSTUSDIR)/include" -I"." -I"$(pwd)/target/debub/"
-SICSTUSFLAGS = -g -O2 -pipe -D_REENTRANT -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -fPIC -DSPDLL  -DSP_RESNAME=integration_0x5Ftests -DSICSTUS_TARGET_VERSION=40800
-LDFLAGS += -Wl,--version-script=$(EXT_NAME)_glue.mapfile -L$(SICSTUSDIR)/lib -Wl,-rpath=$(SICSTUSDIR)/lib -Wl,-rpath-link=$(SICSTUSDIR)/lib
-DYLIBS=-ldl -lm -lpthread -lrt -lsprt4-8-0
+SICSTUSFLAGS = -g -O2 -pipe -D_REENTRANT -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -fPIC -DSPDLL  -DSP_RESNAME=integration_0x5Ftests -DSICSTUS_TARGET_VERSION=40900
+LDFLAGS += -Wl,--version-script=$(EXT_NAME)_glue.mapfile
+DYLIBS=-ldl -lm -lpthread -lrt
 
 .PHONY: all run clean
 
 all: $(EXT_NAME).so
 
 run: $(EXT_NAME).so
-	@sicstus -l $(EXT_NAME) --goal "rust_main, halt."
+	@$(SICSTUSDIR)/bin/sicstus -l $(EXT_NAME) --goal "rust_main, halt."
 
 $(EXT_NAME).so: $(EXT_NAME)_glue.o
 	@gcc -shared $(LDFLAGS) $(EXT_NAME).o $(EXT_NAME)_glue.o $(LIB) -o $(EXT_NAME).so $(DYLIBS)
@@ -30,6 +28,8 @@ $(EXT_NAME)_glue.c $(EXT_NAME)_glue.h: $(EXT_NAME).pl $(EXT_NAME).c $(LIB)
 $(EXT_NAME).c: build
 
 $(LIB): build
+	@echo "Copying library"
+	@rm -f $(LIB)
 	@mv target/debug/lib$(EXT_NAME).a $(LIB)
 
 build:
