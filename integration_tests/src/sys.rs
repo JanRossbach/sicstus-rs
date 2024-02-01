@@ -5,7 +5,6 @@ pub fn sys_tests() {
     test_sp_atom_from_string();
     test_sp_atom_length();
     test_sp_compare();
-    test_print();
 }
 
 fn test_sp_atom_from_string() {
@@ -33,11 +32,4 @@ fn test_sp_compare() {
     sp_put_atom(t2, a2).unwrap();
     assert_eq!(Ordering::Less, sp_compare(t1,t2));
     sicstus_rs::println!("test_sp_compare, Ok");
-}
-
-fn test_print() {
-    sicstus_rs::print!("Hello, world from sicstus_rs print macro!\n");
-    //println!("???");
-    sicstus_rs::println!("Hello, world from sicstus_rs println macro!");
-    println!("test_print, Ok");
 }

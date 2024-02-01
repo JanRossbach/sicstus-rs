@@ -249,7 +249,10 @@ pub struct TermRefIterator {
 
 impl TermRefIterator {
     pub fn new(term_ref: TermRef) -> Self {
-        assert!(term_ref.is_list());
+        assert!(
+            term_ref.is_list(),
+            "cannot cast term_ref into iterator. Not a list."
+        );
         TermRefIterator {
             term_ref: term_ref.term_ref(),
         }
@@ -281,5 +284,35 @@ impl FromIterator<TermRef> for TermRef {
             sp_cons_list(l, item.term_ref, l).unwrap();
         }
         l.into()
+    }
+}
+
+impl From<u32> for TermRef {
+    fn from(integer: u32) -> Self {
+        TermRef::new_integer(integer as i64)
+    }
+}
+
+impl From<u64> for TermRef {
+    fn from(integer: u64) -> Self {
+        TermRef::new_integer(integer as i64)
+    }
+}
+
+impl From<u8> for TermRef {
+    fn from(integer: u8) -> Self {
+        TermRef::new_integer(integer as i64)
+    }
+}
+
+impl From<usize> for TermRef {
+    fn from(integer: usize) -> Self {
+        TermRef::new_integer(integer as i64)
+    }
+}
+
+impl From<f64> for TermRef {
+    fn from(float: f64) -> Self {
+        TermRef::new_float(float)
     }
 }
