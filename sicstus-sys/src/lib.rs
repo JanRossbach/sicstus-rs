@@ -33,6 +33,9 @@ use bindings::SP_get_dispatch_40800;
 #[cfg(sicstus_version = "4.9.0")]
 use bindings::SP_get_dispatch_40900;
 
+#[cfg(sicstus_version = "4.7.1")]
+use bindings::SP_get_dispatch_40701;
+
 use bindings::DISPATCH_TABLE_STRUCT_SICSTUS_H;
 use bindings::SP_GLUE_INITIALIZE_OPTION_RESTORE;
 pub use bindings::{
@@ -66,6 +69,8 @@ impl Sicstus {
 impl Sicstus {
     fn new() -> Self {
         unsafe {
+            #[cfg(sicstus_version = "4.7.1")]
+            let sicstus: *mut SICSTUS_API_STRUCT = SP_get_dispatch_40701(core::ptr::null_mut());
             #[cfg(sicstus_version = "4.8.0")]
             let sicstus: *mut SICSTUS_API_STRUCT = SP_get_dispatch_40800(core::ptr::null_mut());
             #[cfg(sicstus_version = "4.9.0")]

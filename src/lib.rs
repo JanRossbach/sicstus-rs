@@ -28,7 +28,6 @@ pub use atom::Atom;
 pub use error::SicstusRsError;
 pub use query::Predicate;
 
-
 pub static WRITER: Mutex<Writer> = Mutex::new(Writer {});
 
 pub struct Writer {}

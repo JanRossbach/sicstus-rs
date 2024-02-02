@@ -3,7 +3,7 @@ use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
-static SUPPORTED_SICSTUS_VERSIONS: [&str; 2] = ["4.8.0", "4.9.0"];
+static SUPPORTED_SICSTUS_VERSIONS: [&str; 3] = ["4.7.1", "4.8.0", "4.9.0"];
 
 fn find_sicstus_root_dir() -> Option<PathBuf> {
     if let Ok(sp_path) = env::var("SICSTUSDIR") {

@@ -1,8 +1,11 @@
 EXT_NAME=integration_tests
 LIB = lib$(EXT_NAME).a
 
+splfr = $(SICSTUSDIR)/bin/splfr
+sicstus = $(SICSTUSDIR)/bin/sicstus
+
 INCLUDEFLAGS = -I"$(SICSTUSDIR)/include" -I"." -I"$(pwd)/target/debub/"
-SICSTUSFLAGS = -g -O2 -pipe -D_REENTRANT -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -fPIC -DSPDLL  -DSP_RESNAME=integration_0x5Ftests -DSICSTUS_TARGET_VERSION=40900
+SICSTUSFLAGS = -g -O2 -pipe -D_REENTRANT -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -fPIC -DSPDLL  -DSP_RESNAME=integration_0x5Ftests -DSICSTUS_TARGET_VERSION=40701
 LDFLAGS += -Wl,--version-script=$(EXT_NAME)_glue.mapfile
 DYLIBS=-ldl -lm -lpthread -lrt
 
@@ -11,7 +14,7 @@ DYLIBS=-ldl -lm -lpthread -lrt
 all: $(EXT_NAME).so
 
 run: $(EXT_NAME).so
-	@$(SICSTUSDIR)/bin/sicstus -l $(EXT_NAME) --goal "rust_main, halt."
+	@$(sicstus) -l $(EXT_NAME) --goal "rust_main, halt."
 
 $(EXT_NAME).so: $(EXT_NAME)_glue.o
 	@gcc -shared $(LDFLAGS) $(EXT_NAME).o $(EXT_NAME)_glue.o $(LIB) -o $(EXT_NAME).so $(DYLIBS)
@@ -23,7 +26,7 @@ $(EXT_NAME).o: $(EXT_NAME).c
 	@gcc $(INCLUDEFLAGS) $(SICSTUSFLAGS) -c $(EXT_NAME).c -o integration_tests.o
 
 $(EXT_NAME)_glue.c $(EXT_NAME)_glue.h: $(EXT_NAME).pl $(EXT_NAME).c $(LIB)
-	@splfr $(EXT_NAME).pl $(EXT_NAME).c $(LIB) --nocompile
+	@$(splfr) $(EXT_NAME).pl $(EXT_NAME).c $(LIB) --nocompile
 
 $(EXT_NAME).c: build
 
