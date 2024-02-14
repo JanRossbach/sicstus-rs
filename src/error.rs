@@ -12,6 +12,7 @@ pub enum SicstusRsError {
     InitializationError(String),
     AtomNotFound(PrologError),
     InvalidName(String),
+    TypeError(String)
 }
 
 pub fn throw_exception(message: String) {
@@ -37,8 +38,17 @@ pub fn handle_sicstus_rs_error(error: SicstusRsError) {
         SicstusRsError::AtomNotFound(e) => {
             handle_prolog_error(e);
         }
+        SicstusRsError::TypeError(e) => {
+            throw_exception(format!("Type error: {:?}", e));
+        }
         SicstusRsError::InvalidName(e) => {
             throw_exception(format!("Invalid name error: {:?}", e));
         }
     };
+}
+
+impl From<PrologError> for SicstusRsError {
+    fn from(error: PrologError) -> Self {
+        SicstusRsError::InternalError(error)
+    }
 }

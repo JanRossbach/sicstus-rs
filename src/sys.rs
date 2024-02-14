@@ -9,6 +9,7 @@
 //! For more rust idiomatic wrapper types look in the rest of the API.
 //! If you need more fine grained control over the C API, you can still call it directly from the sicstus_sys crate.
 //! This module contains plenty of examples of how to do that.
+//! For the variable functions in the C API, please use the Macros in the sicstus_sys crate directly.
 
 use alloc::ffi::CString;
 pub use sicstus_sys::{
@@ -49,6 +50,7 @@ mod error {
         TypeCheckError,
         AtomRegistrationError(u64),
         AtomUnregistrationError(u64),
+        TypeError,
     }
 
     // region:    --- Error Boilerplate
@@ -662,9 +664,11 @@ macro_rules! open_query {
 ///
 /// # Return Value
 /// The reference if the predicate is found, NULL otherwise with error code PRED_NOT_FOUND.
-pub fn sp_pred(name_atom: &str, arity: u32, module_atom: &str) -> Result<SP_pred_ref, PrologError> {
-    let name_atom = sp_atom_from_string(name_atom)?;
-    let module_atom = sp_atom_from_string(module_atom)?;
+pub fn sp_pred(
+    name_atom: SP_atom,
+    arity: u32,
+    module_atom: SP_atom,
+) -> Result<SP_pred_ref, PrologError> {
     let ret_val = unsafe { SP_pred(name_atom, arity as SP_integer, module_atom) };
     if ret_val.is_null() {
         Err(PrologError::PredicateNotFound)
@@ -1235,5 +1239,33 @@ pub fn sp_unregister_atom(atom: SP_atom) -> Result<(), PrologError> {
         Err(PrologError::AtomUnregistrationError(atom))
     } else {
         Ok(())
+    }
+}
+
+/// If Ok, returns a pointer to the predicate definition. Otherwise an appropriate error.
+/// Slower than sp_pred
+pub fn sp_predicate(
+    name: &str,
+    arity: usize,
+    module: Option<&str>,
+) -> Result<SP_pred_ref, PrologError> {
+    let name_cstring = CString::new(name).unwrap();
+    if module.is_some() {
+        let module_cstring = CString::new(module.unwrap()).unwrap();
+        let result =
+            unsafe { SP_predicate(name_cstring.as_ptr(), arity as i64, module_cstring.as_ptr()) };
+        if result.is_null() {
+            Err(PrologError::PredicateNotFound)
+        } else {
+            Ok(result)
+        }
+    } else {
+        let result =
+            unsafe { SP_predicate(name_cstring.as_ptr(), arity as i64, core::ptr::null()) };
+        if result.is_null() {
+            Err(PrologError::PredicateNotFound)
+        } else {
+            Ok(result)
+        }
     }
 }
