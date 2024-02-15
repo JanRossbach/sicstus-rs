@@ -5,7 +5,7 @@ splfr = $(SICSTUSDIR)/bin/splfr
 sicstus = $(SICSTUSDIR)/bin/sicstus
 
 INCLUDEFLAGS = -I"$(SICSTUSDIR)/include" -I"." -I"$(pwd)/target/debub/"
-SICSTUSFLAGS = -g -O2 -pipe -D_REENTRANT -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -fPIC -DSPDLL  -DSP_RESNAME=integration_0x5Ftests -DSICSTUS_TARGET_VERSION=40701
+SICSTUSFLAGS = -g -O2 -pipe -D_REENTRANT -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -fPIC -DSPDLL  -DSP_RESNAME=integration_0x5Ftests -DSICSTUS_TARGET_VERSION=40900
 LDFLAGS += -Wl,--version-script=$(EXT_NAME)_glue.mapfile
 DYLIBS=-ldl -lm -lpthread -lrt
 

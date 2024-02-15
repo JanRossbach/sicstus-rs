@@ -20,8 +20,8 @@ pub struct Predicate {
 
 impl Predicate {
     pub fn new(module: String, name: String, arity: usize) -> Result<Self, QueryError> {
-        let module = Atom::from_string(module)?;
-        let name = Atom::from_string(name)?;
+        let module = Atom::from_string(module);
+        let name = Atom::from_string(name);
         let pred_ref = unsafe { SP_pred(name.as_atom(), arity as i64, module.as_atom()) };
         if pred_ref.is_null() {
             return Err(QueryError::InternalError(PrologError::PredicateNotFound));
